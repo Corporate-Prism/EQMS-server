@@ -1,115 +1,115 @@
-// import express from "express";
-// import cors from "cors";
-// import dotenv from "dotenv";
-// import connectDB from "./config/db.js";
-// import swaggerJSDoc from "swagger-jsdoc";
-// import swaggerUi from "swagger-ui-express";
-// import authRoutes from "./src/routes/authRoutes.js";
-// import roleRoutes from "./src/routes/roleRoutes.js";
-// import otpRoutes from "./src/routes/otpRoutes.js";
-
-// dotenv.config();
-
-// const app = express();
-// const PORT = process.env.PORT || 8080;
-
-// const swaggerOptions = {
-//   definition: {
-//     openapi: "3.0.0",
-//     info: {
-//       title: "EQMS API Endpoints",
-//       version: "1.0.0",
-//     },
-//     components: {
-//       securitySchemes: {
-//         bearerAuth: {
-//           type: "http",
-//           scheme: "bearer",
-//           bearerFormat: "JWT",
-//         },
-//       },
-//     },
-//   },
-//   apis: ["./src/routes/*.js"],
-// };
-
-// const swaggerSpec = swaggerJSDoc(swaggerOptions);
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// app.use(cors());
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-
-// // app.get("/", (req, res) => {
-// //   res.send("Welcome to the EQMS API endpoint");
-// // });
-
-// app.use("/api/v1/auth", authRoutes);
-// app.use("/api/v1/roles", roleRoutes);
-// app.use("/api/v1/otp", otpRoutes);
-
-// app.listen(PORT, () => {
-//   connectDB();
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-
 import authRoutes from "./src/routes/authRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import otpRoutes from "./src/routes/otpRoutes.js";
-import { swaggerServe, swaggerSetup } from "./swagger.js";
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
-// Connect DB when Lambda cold-starts
-connectDB();
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "EQMS API Endpoints",
+      version: "1.0.0",
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+  },
+  apis: ["./src/routes/*.js"],
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Swagger config
-// const swaggerOptions = {
-//   definition: {
-//     openapi: "3.0.0",
-//     info: {
-//       title: "EQMS API Endpoints",
-//       version: "1.0.0",
-//     },
-//     components: {
-//       securitySchemes: {
-//         bearerAuth: {
-//           type: "http",
-//           scheme: "bearer",
-//           bearerFormat: "JWT",
-//         },
-//       },
-//     },
-//   },
-//   apis: ["./src/routes/*.js"],
-// };
-
-// const swaggerSpec = swaggerJSDoc(swaggerOptions);
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-app.use("/api-docs", swaggerServe, swaggerSetup);
-
 app.get("/", (req, res) => {
   res.send("Welcome to the EQMS API endpoint");
 });
 
-// Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/roles", roleRoutes);
 app.use("/api/v1/otp", otpRoutes);
 
-// Export the app (Important for Vercel)
-export default app;
+app.listen(PORT, () => {
+  connectDB();
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// import express from "express";
+// import cors from "cors";
+// import dotenv from "dotenv";
+// import connectDB from "./config/db.js";
+// import swaggerJSDoc from "swagger-jsdoc";
+// import swaggerUi from "swagger-ui-express";
+
+// import authRoutes from "./src/routes/authRoutes.js";
+// import roleRoutes from "./src/routes/roleRoutes.js";
+// import otpRoutes from "./src/routes/otpRoutes.js";
+// import { swaggerServe, swaggerSetup } from "./swagger.js";
+
+// dotenv.config();
+
+// const app = express();
+
+// // Connect DB when Lambda cold-starts
+// connectDB();
+
+// app.use(cors());
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // Swagger config
+// // const swaggerOptions = {
+// //   definition: {
+// //     openapi: "3.0.0",
+// //     info: {
+// //       title: "EQMS API Endpoints",
+// //       version: "1.0.0",
+// //     },
+// //     components: {
+// //       securitySchemes: {
+// //         bearerAuth: {
+// //           type: "http",
+// //           scheme: "bearer",
+// //           bearerFormat: "JWT",
+// //         },
+// //       },
+// //     },
+// //   },
+// //   apis: ["./src/routes/*.js"],
+// // };
+
+// // const swaggerSpec = swaggerJSDoc(swaggerOptions);
+// // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// app.use("/api-docs", swaggerServe, swaggerSetup);
+
+// app.get("/", (req, res) => {
+//   res.send("Welcome to the EQMS API endpoint");
+// });
+
+// // Routes
+// app.use("/api/v1/auth", authRoutes);
+// app.use("/api/v1/roles", roleRoutes);
+// app.use("/api/v1/otp", otpRoutes);
+
+// // Export the app (Important for Vercel)
+// export default app;
