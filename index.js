@@ -63,6 +63,7 @@ import swaggerUi from "swagger-ui-express";
 import authRoutes from "./src/routes/authRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import otpRoutes from "./src/routes/otpRoutes.js";
+import { swaggerServe, swaggerSetup } from "./swagger.js";
 
 dotenv.config();
 
@@ -76,28 +77,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger config
-const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "EQMS API Endpoints",
-      version: "1.0.0",
-    },
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-  },
-  apis: ["./src/routes/*.js"],
-};
+// const swaggerOptions = {
+//   definition: {
+//     openapi: "3.0.0",
+//     info: {
+//       title: "EQMS API Endpoints",
+//       version: "1.0.0",
+//     },
+//     components: {
+//       securitySchemes: {
+//         bearerAuth: {
+//           type: "http",
+//           scheme: "bearer",
+//           bearerFormat: "JWT",
+//         },
+//       },
+//     },
+//   },
+//   apis: ["./src/routes/*.js"],
+// };
 
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// const swaggerSpec = swaggerJSDoc(swaggerOptions);
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use("/api-docs", swaggerServe, swaggerSetup);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the EQMS API endpoint");
