@@ -22,13 +22,16 @@ export const signup = async (req, res) => {
 
     await newUser.save();
 
-    return res
-      .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: newUser,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: error.message || "Internal server error" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };
 
@@ -47,12 +50,10 @@ export const login = async (req, res) => {
     }
 
     if (!user.isActivate) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "You are on the cooling period by now, please try again later.",
-        });
+      return res.status(403).json({
+        message:
+          "You are on the cooling period by now, please try again later.",
+      });
     }
 
     const isMatch = await verifyPassword(password, user.password);
@@ -63,11 +64,14 @@ export const login = async (req, res) => {
 
     const token = generateToken({ id: user._id, role: user.role });
 
-    return res.status(200).json({ message: "Login successful", user, token });
-  } catch (error) {
     return res
-      .status(500)
-      .json({ message: error.message || "Internal server error" });
+      .status(200)
+      .json({ success: true, message: "Login successful", user, token });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };
 
@@ -90,11 +94,14 @@ export const resetPassword = async (req, res) => {
     user.password = await hashPassword(newPassword);
     await user.save();
 
-    return res.status(200).json({ message: "Password reset successful" });
-  } catch (error) {
     return res
-      .status(500)
-      .json({ message: error.message || "Internal server error" });
+      .status(200)
+      .json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };
 
@@ -113,10 +120,16 @@ export const activateUser = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "User activation status updated successfully" });
+      .json({
+        success: true,
+        message: "User activation status updated successfully",
+      });
   } catch (error) {
     return res
       .status(500)
-      .json({ message: error.message || "Internal server error" });
+      .json({
+        success: false,
+        message: error.message || "Internal server error",
+      });
   }
 };
