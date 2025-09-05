@@ -17,7 +17,7 @@ export const generateOTP = async (req, res) => {
     return res.status(400).json({ message: "Email and action are required." });
   }
 
-  const user = await Auth.findOne({ where: { email } });
+  const user = await Auth.findOne({ email });
 
   if (action === "register" && user) {
     return res.status(400).json({ message: "User already exists" });
