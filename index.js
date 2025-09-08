@@ -7,6 +7,9 @@ import swaggerUi from "swagger-ui-express";
 import authRoutes from "./src/routes/authRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import otpRoutes from "./src/routes/otpRoutes.js";
+import permissionRoutes from "./src/routes/permissionRoutes.js";
+import rolePermissionRoutes from "./src/routes/RolePermissionRoutes.js";
+import departmentRoutes from "./src/routes/departmentRoutes.js";
 
 dotenv.config();
 
@@ -46,7 +49,10 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/roles", roleRoutes);
+app.use("/api/v1/departments", departmentRoutes);
 app.use("/api/v1/otp", otpRoutes);
+app.use("/api/v1/permissions", permissionRoutes);
+app.use("/api/v1/rolePermissions", rolePermissionRoutes);
 
 app.listen(PORT, () => {
   connectDB();
