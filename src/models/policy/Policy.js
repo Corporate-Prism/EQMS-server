@@ -9,7 +9,10 @@ const PolicySchema = new mongoose.Schema(
     //     required: true,
     //   },
     // ],
-
+    policyName: {
+      type: String,
+      required: true,
+    },
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
@@ -17,11 +20,11 @@ const PolicySchema = new mongoose.Schema(
     },
   },
 
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-PolicySchema.virtual("Version", {
-  ref: "Version",
+PolicySchema.virtual("versions", {
+  ref: "PolicyVersion",
   localField: "_id",
   foreignField: "policy",
 });

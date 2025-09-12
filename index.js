@@ -10,6 +10,8 @@ import otpRoutes from "./src/routes/otpRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
 import rolePermissionRoutes from "./src/routes/RolePermissionRoutes.js";
 import departmentRoutes from "./src/routes/departmentRoutes.js";
+import manualRoutes from "./src/routes/manualRoutes.js";
+import policyRoutes from "./src/routes/policyRoutes.js";
 
 dotenv.config();
 
@@ -53,6 +55,8 @@ app.use("/api/v1/departments", departmentRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/rolePermissions", rolePermissionRoutes);
+app.use("/api/v1/manuals", manualRoutes);
+app.use("api/v1/policies", policyRoutes);
 
 app.listen(PORT, () => {
   connectDB();
