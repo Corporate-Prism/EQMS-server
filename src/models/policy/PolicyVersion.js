@@ -15,6 +15,7 @@ const policyVersionSchema = new mongoose.Schema(
     versionNumber: {
       type: String,
       required: true,
+      default: "1.0", // first version
     },
     objective: {
       type: String,
