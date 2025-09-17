@@ -49,7 +49,7 @@ const procedureVersionSchema = new mongoose.Schema(
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
-      required: true,
+      // required: true,
     },
     status: {
       type: String,
