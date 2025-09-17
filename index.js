@@ -58,9 +58,9 @@ app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/rolePermissions", rolePermissionRoutes);
 app.use("/api/v1/manuals", manualRoutes);
-app.use("api/v1/policies", policyRoutes);
-app.use("api/v1/procedures", procedureRoutes);
-app.use("api/v1/work-instructions", workInstructionRoutes);
+app.use("/api/v1/policies", policyRoutes);
+app.use("/api/v1/procedures", procedureRoutes);
+app.use("/api/v1/work-instructions", workInstructionRoutes);
 
 app.listen(PORT, () => {
   connectDB();
