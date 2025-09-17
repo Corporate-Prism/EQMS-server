@@ -24,7 +24,7 @@ const procedureSchema = new mongoose.Schema(
 );
 
 procedureSchema.virtual("versions", {
-  ref: "procedureVersion",
+  ref: "ProcedureVersion",
   localField: "_id",
   foreignField: "procedure",
 });

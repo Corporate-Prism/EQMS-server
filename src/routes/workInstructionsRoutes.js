@@ -50,7 +50,7 @@ const router = express.Router();
  *                 example: QA
  *               versionType:
  *                 type: string
- *                 example: Draft
+ *                 example: major
  *               preparedBy:
  *                 type: string
  *                 description: User ID who prepared this version
@@ -110,7 +110,7 @@ router.post("/new", createWI);
  *                 example: 6510f9c123abc456def78901
  *               versionType:
  *                 type: string
- *                 example: Revision
+ *                 example: minor
  *               preparedBy:
  *                 type: string
  *                 description: User ID who prepared this version
