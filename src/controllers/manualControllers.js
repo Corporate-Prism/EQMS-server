@@ -7,6 +7,7 @@ export const createManual = async (req, res) => {
     const {
       manualName,
       department,
+      deptCode,
       versionType,
       introduction,
       objective,
@@ -18,9 +19,36 @@ export const createManual = async (req, res) => {
       preparedBy,
     } = req.body;
 
+    if (!deptCode) {
+      return res
+        .status(400)
+        .json({ success: false, message: "deptCode is required" });
+    }
+
+    // 1. Find the last policy for this deptCode
+    const lastManual = await Manual.findOne({ deptCode })
+      .sort({ createdAt: -1 })
+      .select("referrenceNumber");
+
+    let nextNumber = "001";
+
+    if (lastManual && lastManual.referrenceNumber) {
+      // Extract last number from "MAN-{deptCode}-XXX"
+      const lastNum = parseInt(
+        lastManual.referrenceNumber.split("-").pop(),
+        10
+      );
+      nextNumber = String(lastNum + 1).padStart(3, "0");
+    }
+
+    // 2. Build reference number
+    const referrenceNumber = `MAN-${deptCode}-${nextNumber}`;
+
     const newManual = new Manual({
       manualName,
       department,
+      deptCode,
+      referrenceNumber,
     });
 
     const newVersion = new ManualVersion({

@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
 
-const manualSchema = new mongoose.Schema(
+const workInstructionSchema = new mongoose.Schema(
   {
-    manualName: {
-      type: String, // <-- you missed "type:" here
+    workInstructionName: {
+      type: String,
       required: true,
     },
     department: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
       required: true,
     },
     deptCode: {
@@ -23,12 +22,15 @@ const manualSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-manualSchema.virtual("versions", {
-  ref: "ManualVersion",
+workInstructionSchema.virtual("versions", {
+  ref: "WIVersion",
   localField: "_id",
-  foreignField: "manual",
+  foreignField: "workInstruction",
 });
 
-const Manual = mongoose.model("Manual", manualSchema);
+const WorkInstruction = mongoose.model(
+  "WorkInstruction",
+  workInstructionSchema
+);
 
-export default Manual;
+export default WorkInstruction;

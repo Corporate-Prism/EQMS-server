@@ -22,7 +22,7 @@ const router = express.Router();
  * @swagger
  * /api/v1/policies/new:
  *   post:
- *     summary: Create a new policy with its first version
+ *     summary: Create a new Policy with its first version
  *     tags: [Policies]
  *     requestBody:
  *       required: true
@@ -33,27 +33,37 @@ const router = express.Router();
  *             required:
  *               - policyName
  *               - department
+ *               - deptCode
  *               - versionType
  *               - preparedBy
  *               - effectiveDate
+ *               - objective
+ *               - scope
+ *               - policies
  *             properties:
  *               policyName:
  *                 type: string
- *                 example: Workplace Safety Policy
+ *                 example: Data Protection Policy
  *               department:
  *                 type: string
- *                 example: 68be8d53e91fa7301a6451b4
+ *                 description: Department ID
+ *                 example: 650f0d8f9a1b2c3d4e5f6789
+ *               deptCode:
+ *                 type: string
+ *                 description: Department code used for reference number generation
+ *                 example: HR
  *               versionType:
  *                 type: string
  *                 enum: [minor, major]
  *                 example: major
  *               preparedBy:
  *                 type: string
- *                 example: 68b000c139451ac7e97cdbf3
+ *                 description: User ID
+ *                 example: 651a2d3b8c1f2d4e5f6789ab
  *               effectiveDate:
  *                 type: string
  *                 format: date
- *                 example: 2025-09-20
+ *                 example: 2025-09-15
  *               objective:
  *                 type: string
  *               scope:
@@ -67,6 +77,8 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Policy created successfully
+ *       400:
+ *         description: Missing required field (e.g., deptCode)
  *       500:
  *         description: Server error
  */

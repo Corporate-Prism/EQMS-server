@@ -148,7 +148,12 @@ const manualVersionSchema = new mongoose.Schema(
       default: "draft",
     },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    strict: false,
+  }
 );
 
 manualVersionSchema.virtual("reviews", {

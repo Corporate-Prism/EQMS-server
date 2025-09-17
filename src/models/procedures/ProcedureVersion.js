@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const policyVersionSchema = new mongoose.Schema(
+const procedureVersionSchema = new mongoose.Schema(
   {
-    policy: {
+    procedure: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Policy",
+      ref: "Procedure",
       required: true,
     },
     versionType: {
@@ -16,7 +16,7 @@ const policyVersionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    objective: {
+    purpose: {
       type: String,
       required: true,
     },
@@ -24,7 +24,7 @@ const policyVersionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    policies: {
+    procedures: {
       type: String,
       required: true,
     },
@@ -46,13 +46,6 @@ const policyVersionSchema = new mongoose.Schema(
       ref: "Auth",
       required: true,
     },
-    // reviews: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Review",
-    //     required: true,
-    //   },
-    // ],
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
@@ -76,19 +69,19 @@ const policyVersionSchema = new mongoose.Schema(
   }
 );
 
-policyVersionSchema.virtual("reviews", {
-  ref: "PolicyReview",
+procedureVersionSchema.virtual("reviews", {
+  ref: "ProcedureReview",
   localField: "_id",
-  foreignField: "policyVersion",
+  foreignField: "procedureVersion",
 });
 
-policyVersionSchema.pre("save", async function (next) {
+procedureVersionSchema.pre("save", async function (next) {
   if (!this.isNew) return next(); // only for new versions
 
-  // Find the latest version of this policy
+  // Find the latest version of this procedure
   const lastVersion = await mongoose
-    .model("PolicyVersion")
-    .findOne({ policy: this.policy })
+    .model("ProcedureVersion")
+    .findOne({ procedure: this.procedure })
     .sort({ createdAt: -1 });
 
   if (!lastVersion) return next(); // first version stays default
@@ -106,6 +99,9 @@ policyVersionSchema.pre("save", async function (next) {
   next();
 });
 
-const PolicyVersion = mongoose.model("PolicyVersion", policyVersionSchema);
+const ProcedureVersion = mongoose.model(
+  "ProcedureVersion",
+  procedureVersionSchema
+);
 
-export default PolicyVersion;
+export default ProcedureVersion;

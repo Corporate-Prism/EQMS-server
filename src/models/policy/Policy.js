@@ -1,14 +1,7 @@
 import mongoose from "mongoose";
 
-const PolicySchema = new mongoose.Schema(
+const policySchema = new mongoose.Schema(
   {
-    // version: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Version",
-    //     required: true,
-    //   },
-    // ],
     policyName: {
       type: String,
       required: true,
@@ -18,17 +11,25 @@ const PolicySchema = new mongoose.Schema(
       ref: "Department",
       required: true,
     },
+    deptCode: {
+      type: String,
+      required: true,
+    },
+    referrenceNumber: {
+      type: String,
+      required: true,
+    },
   },
 
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-PolicySchema.virtual("versions", {
+policySchema.virtual("versions", {
   ref: "PolicyVersion",
   localField: "_id",
   foreignField: "policy",
 });
 
-const Policy = mongoose.model("Policy", PolicySchema);
+const Policy = mongoose.model("Policy", policySchema);
 
 export default Policy;

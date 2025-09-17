@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 
-const manualSchema = new mongoose.Schema(
+const procedureSchema = new mongoose.Schema(
   {
-    manualName: {
-      type: String, // <-- you missed "type:" here
+    procedureName: {
+      type: String,
       required: true,
     },
     department: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
       required: true,
     },
+
     deptCode: {
       type: String,
       required: true,
@@ -23,12 +23,12 @@ const manualSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-manualSchema.virtual("versions", {
-  ref: "ManualVersion",
+procedureSchema.virtual("versions", {
+  ref: "procedureVersion",
   localField: "_id",
-  foreignField: "manual",
+  foreignField: "procedure",
 });
 
-const Manual = mongoose.model("Manual", manualSchema);
+const Procedure = mongoose.model("Procedure", procedureSchema);
 
-export default Manual;
+export default Procedure;

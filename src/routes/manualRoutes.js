@@ -33,6 +33,7 @@ const router = express.Router();
  *             required:
  *               - manualName
  *               - department
+ *               - deptCode
  *               - versionType
  *               - introduction
  *               - objective
@@ -45,12 +46,19 @@ const router = express.Router();
  *             properties:
  *               manualName:
  *                 type: string
+ *                 example: Quality Management Manual
  *               department:
  *                 type: string
  *                 description: Department ID
+ *                 example: 650f0d8f9a1b2c3d4e5f6789
+ *               deptCode:
+ *                 type: string
+ *                 description: Code of the department used for reference number generation
+ *                 example: QA
  *               versionType:
  *                 type: string
  *                 enum: [minor, major]
+ *                 example: major
  *               introduction:
  *                 type: string
  *               objective:
@@ -66,9 +74,11 @@ const router = express.Router();
  *               effectiveDate:
  *                 type: string
  *                 format: date
+ *                 example: 2025-09-15
  *               preparedBy:
  *                 type: string
  *                 description: User ID
+ *                 example: 651a2d3b8c1f2d4e5f6789ab
  *     responses:
  *       201:
  *         description: Manual created successfully

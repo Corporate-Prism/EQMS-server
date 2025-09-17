@@ -12,6 +12,8 @@ import rolePermissionRoutes from "./src/routes/RolePermissionRoutes.js";
 import departmentRoutes from "./src/routes/departmentRoutes.js";
 import manualRoutes from "./src/routes/manualRoutes.js";
 import policyRoutes from "./src/routes/policyRoutes.js";
+import procedureRoutes from "./src/routes/procedureRoutes.js";
+import workInstructionRoutes from "./src/routes/workInstructionsRoutes.js";
 
 dotenv.config();
 
@@ -57,6 +59,8 @@ app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/rolePermissions", rolePermissionRoutes);
 app.use("/api/v1/manuals", manualRoutes);
 app.use("api/v1/policies", policyRoutes);
+app.use("api/v1/procedures", procedureRoutes);
+app.use("api/v1/work-instructions", workInstructionRoutes);
 
 app.listen(PORT, () => {
   connectDB();
