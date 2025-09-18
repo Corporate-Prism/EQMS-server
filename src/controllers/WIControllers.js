@@ -132,7 +132,18 @@ export const getWIs = async (req, res) => {
 export const getWIVersionsByWIId = async (req, res) => {
   try {
     const { id } = req.params;
-    const WI = await WorkInstruction.findById(id).populate("versions");
+    // const WI = await WorkInstruction.findById(id).populate("versions");
+    const WI = await WorkInstruction.findById(req.params.id).populate({
+      path: "versions",
+      populate: [
+        { path: "preparedBy", select: "name email" },
+        { path: "approvedBy", select: "name email" },
+        {
+          path: "reviews",
+          populate: { path: "reviewedBy", select: "name email" },
+        },
+      ],
+    });
 
     if (!WI) {
       return res

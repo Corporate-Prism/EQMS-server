@@ -130,7 +130,18 @@ export const getPolicies = async (req, res) => {
 export const getPolicyVersionsByPolicyId = async (req, res) => {
   try {
     const { id } = req.params;
-    const policy = await Policy.findById(id).populate("versions");
+    // const policy = await Policy.findById(id).populate("versions");
+    const policy = await Policy.findById(req.params.id).populate({
+      path: "versions",
+      populate: [
+        { path: "preparedBy", select: "name email" },
+        { path: "approvedBy", select: "name email" },
+        {
+          path: "reviews",
+          populate: { path: "reviewedBy", select: "name email" },
+        },
+      ],
+    });
 
     if (!policy) {
       return res

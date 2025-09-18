@@ -128,7 +128,18 @@ export const getManuals = async (req, res) => {
 
 export const getManualVersionsByManualId = async (req, res) => {
   try {
-    const manual = await Manual.findById(req.params.id).populate("versions");
+    // const manual = await Manual.findById(req.params.id).populate("versions");
+    const manual = await Manual.findById(req.params.id).populate({
+      path: "versions",
+      populate: [
+        { path: "preparedBy", select: "name email" },
+        { path: "approvedBy", select: "name email" },
+        {
+          path: "reviews",
+          populate: { path: "reviewedBy", select: "name email" },
+        },
+      ],
+    });
     if (!manual) {
       return res
         .status(404)

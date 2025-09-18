@@ -125,7 +125,18 @@ export const addProcedureVersion = async (req, res) => {
 
 export const getProcedures = async (req, res) => {
   try {
-    const procedures = await Procedure.find().populate("versions");
+    // const procedures = await Procedure.find().populate("versions");
+    const procedures = await Procedure.findById(req.params.id).populate({
+      path: "versions",
+      populate: [
+        { path: "preparedBy", select: "name email" },
+        { path: "approvedBy", select: "name email" },
+        {
+          path: "reviews",
+          populate: { path: "reviewedBy", select: "name email" },
+        },
+      ],
+    });
     return res.status(200).json({ success: true, data: procedures });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
