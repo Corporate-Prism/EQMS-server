@@ -1,4 +1,5 @@
 import Policy from "../models/policy/Policy.js";
+import PolicyReview from "../models/policy/PolicyReview.js";
 import PolicyVersion from "../models/policy/PolicyVersion.js";
 
 export const createPolicy = async (req, res) => {
@@ -129,7 +130,7 @@ export const getPolicies = async (req, res) => {
 
 export const getPolicyVersionsByPolicyId = async (req, res) => {
   try {
-    const { id } = req.params;
+    // const { id } = req.params;
     // const policy = await Policy.findById(id).populate("versions");
     const policy = await Policy.findById(req.params.id).populate({
       path: "versions",
