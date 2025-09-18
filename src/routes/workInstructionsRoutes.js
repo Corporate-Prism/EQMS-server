@@ -159,7 +159,7 @@ router.get("/", getWIs);
 
 /**
  * @swagger
- * /api/v1/work-instructions/{id}/versions:
+ * /api/v1/work-instructions/{id}:
  *   get:
  *     summary: Get all versions for a specific Work Instruction
  *     tags: [WorkInstructions]
@@ -171,7 +171,7 @@ router.get("/", getWIs);
  *           type: string
  *         description: Work Instruction ID
  */
-router.get("/:id/versions", getWIVersionsByWIId);
+router.get("/:id", getWIVersionsByWIId);
 
 /**
  * @swagger

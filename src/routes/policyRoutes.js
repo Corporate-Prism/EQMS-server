@@ -152,7 +152,7 @@ router.get("/", getPolicies);
 
 /**
  * @swagger
- * /api/v1/policies/{id}/versions:
+ * /api/v1/policies/{id}:
  *   get:
  *     summary: Get all versions of a specific policy
  *     tags: [Policies]
@@ -171,7 +171,7 @@ router.get("/", getPolicies);
  *       500:
  *         description: Server error
  */
-router.get("/:id/versions", getPolicyVersionsByPolicyId);
+router.get("/:id", getPolicyVersionsByPolicyId);
 
 /**
  * @swagger

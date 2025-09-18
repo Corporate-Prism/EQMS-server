@@ -165,7 +165,7 @@ router.get("/", getProcedures);
 
 /**
  * @swagger
- * /api/v1/procedures/{id}/versions:
+ * /api/v1/procedures/{id}:
  *   get:
  *     summary: Get all versions for a specific procedure
  *     tags: [Procedures]
@@ -184,7 +184,7 @@ router.get("/", getProcedures);
  *       500:
  *         description: Internal server error
  */
-router.get("/:id/versions", getProcedureVersionsByProcedureId);
+router.get("/:id", getProcedureVersionsByProcedureId);
 
 /**
  * @swagger
