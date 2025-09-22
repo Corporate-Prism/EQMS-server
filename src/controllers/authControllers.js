@@ -43,7 +43,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const user = await Auth.findOne({ email });
+    const user = await Auth.findOne({ email }).populate("role department");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -77,7 +77,7 @@ export const login = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await Auth.find().populate("role");
+    const users = await Auth.find().populate("role department");
 
     return res.status(200).json({ success: true, users });
   } catch (error) {
