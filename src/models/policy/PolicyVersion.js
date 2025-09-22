@@ -61,7 +61,13 @@ const policyVersionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "under_review", "under_approval", "approved"],
+      enum: [
+        "draft",
+        "under_review",
+        "under_approval",
+        "approved",
+        "archieved",
+      ],
       default: "draft",
     },
     nextReviewDate: {

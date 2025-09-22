@@ -75,6 +75,19 @@ export const login = async (req, res) => {
   }
 };
 
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await Auth.find().populate("role");
+
+    return res.status(200).json({ success: true, users });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
 export const resetPassword = async (req, res) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
@@ -118,18 +131,14 @@ export const activateUser = async (req, res) => {
     user.isActivate = !user.isActivate;
     await user.save();
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "User activation status updated successfully",
-      });
+    return res.status(200).json({
+      success: true,
+      message: "User activation status updated successfully",
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal server error",
-      });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };

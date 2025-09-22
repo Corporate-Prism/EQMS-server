@@ -210,9 +210,10 @@ export const reviewPolicyVersion = async (req, res) => {
 
 export const approvePolicyVersion = async (req, res) => {
   try {
-    const { versionId, approvedBy } = req.body;
+    const { lastVrsionId, versionId, approvedBy } = req.body;
 
     const version = await PolicyVersion.findById(versionId);
+    const lastVersion = await PolicyVersion.findById(lastVrsionId);
 
     if (!version) {
       return res
@@ -220,9 +221,17 @@ export const approvePolicyVersion = async (req, res) => {
         .json({ success: false, message: "Policy Version not found" });
     }
 
+    if (!lastVersion) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy Version not found" });
+    }
+
     version.status = "approved";
     version.approvedBy = approvedBy;
+    lastVersion.status = "archieved";
     await version.save();
+    await lastVersion.save();
 
     return res.status(200).json({
       success: true,

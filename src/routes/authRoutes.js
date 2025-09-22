@@ -4,6 +4,7 @@ import {
   login,
   resetPassword,
   activateUser,
+  getAllUsers,
 } from "../controllers/authControllers.js";
 
 const router = express.Router();
@@ -89,6 +90,20 @@ router.post("/login", login);
 
 /**
  * @swagger
+ * /api/v1/auth/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Successfully fetched users
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/users", getAllUsers);
+
+/**
+ * @swagger
  * /api/v1/auth/reset-password:
  *   put:
  *     summary: Reset Password
@@ -121,26 +136,25 @@ router.put("/reset-password", resetPassword);
 
 /**
  * @swagger
- * path:
- *   /api/v1/auth/activate-user/{userId}:
- *     put:
- *       summary: Activate or deactivate a user
- *       tags: [Auth]
- *       description: Toggle the activation status of a user
- *       parameters:
- *         - in: path
- *           name: userId
- *           required: true
- *           description: ID of the user to activate or deactivate
- *           schema:
- *             type: string
- *       responses:
- *         200:
- *           description: User activation status updated successfully
- *         404:
- *           description: User not found
- *         500:
- *           description: Internal server error
+ * /api/v1/auth/activate-user/{userId}:
+ *   put:
+ *     summary: Activate or deactivate a user
+ *     tags: [Auth]
+ *     description: Toggle the activation status of a user
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID of the user to activate or deactivate
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User activation status updated successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
  */
 router.put("/activate-user/:userId", activateUser);
 

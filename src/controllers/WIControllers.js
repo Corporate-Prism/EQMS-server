@@ -213,9 +213,10 @@ export const reviewWIVersion = async (req, res) => {
 
 export const approveWIVersion = async (req, res) => {
   try {
-    const { versionId, approvedBy } = req.body;
+    const { lastVersionId, versionId, approvedBy } = req.body;
 
     const version = await WIVersion.findById(versionId);
+    const lastVersion = await WIVersion.findById(lastVersionId);
 
     if (!version) {
       return res
@@ -223,9 +224,18 @@ export const approveWIVersion = async (req, res) => {
         .json({ success: false, message: "Work Instrction Version not found" });
     }
 
+    if (!lastVersion) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Work Instrction Version not found" });
+    }
+
     version.status = "approved";
     version.approvedBy = approvedBy;
+    lastVersion.status = "archieved";
+
     await version.save();
+    await lastVersion.save();
 
     return res.status(200).json({
       success: true,

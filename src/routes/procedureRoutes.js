@@ -263,13 +263,18 @@ router.post("/version/review", reviewProcedureVersion);
  *             type: object
  *             required:
  *               - versionId
+ *               - lastVersionId
  *               - approvedBy
  *             properties:
  *               versionId:
  *                 type: string
+ *                 example: 68c2a0c57a438b2a6250fe11\
+ *               lastVersionId:
+ *                 type: string
+ *                 example: 68c2a0c57a438b2a6250fe11
  *               approvedBy:
  *                 type: string
- *                 description: User ID of approver
+ *                 example: 68b000c139451ac7e97cdbf3
  *     responses:
  *       200:
  *         description: Procedure version approved successfully
