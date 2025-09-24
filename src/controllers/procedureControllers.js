@@ -132,6 +132,18 @@ export const getProcedures = async (req, res) => {
   }
 };
 
+export const getProceuresByDepartmentId = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const procedures = await Procedure.find({
+      department: departmentId,
+    }).populate("versions");
+    return res.status(200).json({ success: true, data: procedures });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getProcedureVersionsByProcedureId = async (req, res) => {
   try {
     const { id } = req.params;

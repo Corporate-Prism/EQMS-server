@@ -7,6 +7,7 @@ import {
   getPolicyVersionById,
   reviewPolicyVersion,
   approvePolicyVersion,
+  getPoliciesByDepartmentId,
 } from "../controllers/policyControllers.js";
 
 const router = express.Router();
@@ -149,6 +150,29 @@ router.post("/version", addPolicyVersion);
  *         description: Server error
  */
 router.get("/", getPolicies);
+
+/**
+ * @swagger
+ * /api/v1/policies/department/{departmentId}:
+ *   get:
+ *     summary: Get policies by department ID
+ *     tags: [Policies]
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         description: ID of the department
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Policies retrieved successfully
+ *       404:
+ *         description: No policies found for the given department
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/department/:departmentId", getPoliciesByDepartmentId);
 
 /**
  * @swagger

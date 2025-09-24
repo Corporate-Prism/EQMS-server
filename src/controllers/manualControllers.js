@@ -126,6 +126,18 @@ export const getManuals = async (req, res) => {
   }
 };
 
+export const getManualsByDepartmentId = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const manuals = await Manual.find({ department: departmentId }).populate(
+      "versions"
+    );
+    return res.status(200).json({ success: true, data: manuals });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getManualVersionsByManualId = async (req, res) => {
   try {
     // const manual = await Manual.findById(req.params.id).populate("versions");

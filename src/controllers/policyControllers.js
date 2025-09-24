@@ -128,6 +128,18 @@ export const getPolicies = async (req, res) => {
   }
 };
 
+export const getPoliciesByDepartmentId = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const policies = await Policy.find({ department: departmentId }).populate(
+      "versions"
+    );
+    return res.status(200).json({ success: true, data: policies });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getPolicyVersionsByPolicyId = async (req, res) => {
   try {
     // const { id } = req.params;

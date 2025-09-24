@@ -129,6 +129,18 @@ export const getWIs = async (req, res) => {
   }
 };
 
+export const getWIsByDepartmentId = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const WIs = await WorkInstruction.find({
+      department: departmentId,
+    }).populate("versions");
+    return res.status(200).json({ success: true, data: WIs });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getWIVersionsByWIId = async (req, res) => {
   try {
     const { id } = req.params;

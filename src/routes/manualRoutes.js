@@ -7,6 +7,7 @@ import {
   reviewManualVersion,
   approveManualVersion,
   getManualVersionById,
+  getManualsByDepartmentId,
 } from "../controllers/manualControllers.js";
 
 const router = express.Router();
@@ -156,6 +157,29 @@ router.post("/version", addManualVersion);
  *         description: Server error
  */
 router.get("/", getManuals);
+
+/**
+ * @swagger
+ * /api/v1/manuals/department/{departmentId}:
+ *   get:
+ *     summary: Get manuals by department ID
+ *     tags: [Manuals]
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         description: ID of the department
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Manuals retrieved successfully
+ *       404:
+ *         description: No manuals found for the given department
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/department/:departmentId", getManualsByDepartmentId);
 
 /**
  * @swagger

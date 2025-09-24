@@ -7,6 +7,7 @@ import {
   getWIVersionById,
   reviewWIVersion,
   approveWIVersion,
+  getWIsByDepartmentId,
 } from "../controllers/WIControllers.js";
 
 const router = express.Router();
@@ -156,6 +157,29 @@ router.post("/version", addWIVersion);
  *     tags: [WorkInstructions]
  */
 router.get("/", getWIs);
+
+/**
+ * @swagger
+ * /api/v1/work-instructions/department/{departmentId}:
+ *   get:
+ *     summary: Get work instructions by department ID
+ *     tags: [WorkInstructions]
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         description: ID of the department
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Work instructions retrieved successfully
+ *       404:
+ *         description: No work instructions found for the given department
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/department/:departmentId", getWIsByDepartmentId);
 
 /**
  * @swagger

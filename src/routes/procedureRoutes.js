@@ -7,6 +7,7 @@ import {
   getProcedureVersionById,
   reviewProcedureVersion,
   approveProcedureVersion,
+  getProceuresByDepartmentId,
 } from "../controllers/procedureControllers.js";
 
 const router = express.Router();
@@ -162,6 +163,29 @@ router.post("/version", addProcedureVersion);
  *         description: Internal server error
  */
 router.get("/", getProcedures);
+
+/**
+ * @swagger
+ * /api/v1/procedures/department/{departmentId}:
+ *   get:
+ *     summary: Get procedures by department ID
+ *     tags: [Procedures]
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         description: ID of the department
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Proceures retrieved successfully
+ *       404:
+ *         description: No procedures found for the given department
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/department/:departmentId", getProceuresByDepartmentId);
 
 /**
  * @swagger
