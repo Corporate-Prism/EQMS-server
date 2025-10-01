@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+*.gguf
+
+src/models/orca-mini-3b-gguf2-q4_0.gguf

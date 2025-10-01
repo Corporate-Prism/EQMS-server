@@ -2,6 +2,7 @@ import express from "express";
 import {
   assignPermissionToRole,
   bulkAssignPermissionsToRole,
+  getRolePermissions,
   removePermissionFromRole,
 } from "../controllers/RolePermissionControllers.js";
 
@@ -109,5 +110,28 @@ router.delete("/removeRolePermission", removePermissionFromRole);
  */
 
 router.post("/assignRolePermission/bulk", bulkAssignPermissionsToRole);
+
+/**
+ * @swagger
+ * /api/v1/rolePermissions/{roleId}:
+ *   get:
+ *     summary: Get all permissions assigned to a role
+ *     tags: [RolePermissions]
+ *     parameters:
+ *       - in: path
+ *         name: roleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Role ID to retrieve permissions for
+ *     responses:
+ *       200:
+ *         description: List of role permissions
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:roleId", getRolePermissions);
 
 export default router;
