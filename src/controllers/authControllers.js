@@ -17,7 +17,7 @@ export const signup = async (req, res) => {
       password: hashedPassword,
       name,
       role,
-      department,
+      department: department || null,
     });
 
     await newUser.save();
