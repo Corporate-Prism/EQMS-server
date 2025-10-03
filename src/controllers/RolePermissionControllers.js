@@ -76,6 +76,37 @@ export const removePermissionFromRole = async (req, res) => {
   }
 };
 
+// export const bulkAssignPermissionsToRole = async (req, res) => {
+//   try {
+//     const { roleId, permissionIds } = req.body;
+
+//     if (
+//       !roleId ||
+//       !Array.isArray(permissionIds) ||
+//       permissionIds.length === 0
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ message: "roleId and an array of permissionIds are required" });
+//     }
+
+//     const assignments = permissionIds.map((permissionId) => ({
+//       role: roleId,
+//       permission: permissionId,
+//     }));
+
+//     await RolePermission.insertMany(assignments, { ordered: false });
+
+//     return res
+//       .status(201)
+//       .json({ message: "Permissions assigned to role successfully" });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ message: error.message || "Internal server error" });
+//   }
+// };
+
 export const bulkAssignPermissionsToRole = async (req, res) => {
   try {
     const { roleId, permissionIds } = req.body;
@@ -90,12 +121,29 @@ export const bulkAssignPermissionsToRole = async (req, res) => {
         .json({ message: "roleId and an array of permissionIds are required" });
     }
 
-    const assignments = permissionIds.map((permissionId) => ({
+    // Find existing role-permission pairs
+    const existing = await RolePermission.find({
+      role: roleId,
+      permission: { $in: permissionIds },
+    }).select("permission");
+
+    const existingIds = existing.map((e) => e.permission.toString());
+
+    // Filter out already existing permissions
+    const newPermissions = permissionIds.filter(
+      (id) => !existingIds.includes(id)
+    );
+
+    if (newPermissions.length === 0) {
+      return res.status(200).json({ message: "No new permissions to assign" });
+    }
+
+    const assignments = newPermissions.map((permissionId) => ({
       role: roleId,
       permission: permissionId,
     }));
 
-    await RolePermission.insertMany(assignments, { ordered: false });
+    await RolePermission.insertMany(assignments);
 
     return res
       .status(201)
