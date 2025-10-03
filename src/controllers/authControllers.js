@@ -134,6 +134,7 @@ export const activateUser = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User activation status updated successfully",
+      user,
     });
   } catch (error) {
     return res.status(500).json({
