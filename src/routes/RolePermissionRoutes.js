@@ -137,7 +137,7 @@ router.get("/:roleId", getRolePermissions);
 
 /**
  * @swagger
- * /roles/permissions/remove:
+ * /api/v1/rolePermissions/remove/bulk:
  *   delete:
  *     summary: Bulk remove permissions from a role
  *     description: Removes multiple permissions from a specific role by providing the roleId and an array of permissionIds.
