@@ -144,8 +144,12 @@ export const getWIsByDepartmentId = async (req, res) => {
 export const getWIVersionsByWIId = async (req, res) => {
   try {
     const { id } = req.params;
-    // const WI = await WorkInstruction.findById(id).populate("versions");
-    const WI = await WorkInstruction.findById(req.params.id).populate({
+
+    // const WI = await WorkInstruction.findById(id).populate({
+    //   path: "versions",
+    // });
+
+    const WI = await WorkInstruction.findById(id).populate({
       path: "versions",
       populate: [
         { path: "preparedBy", select: "name email" },
@@ -153,6 +157,7 @@ export const getWIVersionsByWIId = async (req, res) => {
         {
           path: "reviews",
           populate: { path: "reviewedBy", select: "name email" },
+          options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last review
         },
       ],
     });

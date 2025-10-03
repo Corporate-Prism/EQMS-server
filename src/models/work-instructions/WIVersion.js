@@ -79,7 +79,7 @@ const WIVersionSchema = new mongoose.Schema(
 WIVersionSchema.virtual("reviews", {
   ref: "WIReview",
   localField: "_id",
-  foreignField: "WIVersion",
+  foreignField: "wiVersion",
 });
 
 WIVersionSchema.pre("save", async function (next) {

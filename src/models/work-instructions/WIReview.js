@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const WIReviewSchema = new mongoose.Schema(
   {
-    WIVersion: {
+    wiVersion: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "PolicyVersion",
+      ref: "WIVersion",
       required: true,
     },
     reviewedBy: {

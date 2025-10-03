@@ -2,6 +2,7 @@ import express from "express";
 import {
   assignPermissionToRole,
   bulkAssignPermissionsToRole,
+  bulkRemovePermissionsFromRole,
   getRolePermissions,
   removePermissionFromRole,
 } from "../controllers/RolePermissionControllers.js";
@@ -133,5 +134,49 @@ router.post("/assignRolePermission/bulk", bulkAssignPermissionsToRole);
  *         description: Internal server error
  */
 router.get("/:roleId", getRolePermissions);
+
+/**
+ * @swagger
+ * /roles/permissions/remove:
+ *   delete:
+ *     summary: Bulk remove permissions from a role
+ *     description: Removes multiple permissions from a specific role by providing the roleId and an array of permissionIds.
+ *     tags:
+ *       - RolePermissions
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - roleId
+ *               - permissionIds
+ *             properties:
+ *               roleId:
+ *                 type: string
+ *                 example: "652f9e31c0a4b2f2d4e9abcd"
+ *               permissionIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["652f9e31c0a4b2f2d4e9abc1", "652f9e31c0a4b2f2d4e9abc2"]
+ *     responses:
+ *       200:
+ *         description: Permissions removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Permissions removed from role successfully
+ *       400:
+ *         description: Missing roleId or permissionIds
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/remove/bulk", bulkRemovePermissionsFromRole);
 
 export default router;

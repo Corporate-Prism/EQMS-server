@@ -136,3 +136,28 @@ export const getRolePermissions = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+export const bulkRemovePermissionsFromRole = async (req, res) => {
+  try {
+    const { roleId, permissionIds } = req.body;
+
+    if (
+      !roleId ||
+      !Array.isArray(permissionIds) ||
+      permissionIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "roleId and an array of permissionIds are required" });
+    }
+
+    await RolePermission.deleteMany({
+      role: roleId,
+      permission: { $in: permissionIds },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};

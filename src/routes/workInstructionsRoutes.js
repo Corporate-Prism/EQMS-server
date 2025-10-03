@@ -155,6 +155,11 @@ router.post("/version", addWIVersion);
  *   get:
  *     summary: Get all Work Instructions with their versions
  *     tags: [WorkInstructions]
+ *     responses:
+ *       200:
+ *         description: List of WIs
+ *       500:
+ *         description: Internal server error
  */
 router.get("/", getWIs);
 
@@ -194,6 +199,13 @@ router.get("/department/:departmentId", getWIsByDepartmentId);
  *         schema:
  *           type: string
  *         description: Work Instruction ID
+ *     responses:
+ *       200:
+ *         description: Versions fetched successfully
+ *       404:
+ *         description: WI not found
+ *       500:
+ *         description: Internal server error
  */
 router.get("/:id", getWIVersionsByWIId);
 
@@ -210,6 +222,13 @@ router.get("/:id", getWIVersionsByWIId);
  *         schema:
  *           type: string
  *         description: Work Instruction Version ID
+ *     responses:
+ *       200:
+ *         description: Work Instruction version fetched successfully
+ *       404:
+ *         description: Work Instruction version not found
+ *       500:
+ *         description: Internal server error
  */
 router.get("/version/:id", getWIVersionById);
 
