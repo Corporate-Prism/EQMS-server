@@ -203,6 +203,11 @@ export const bulkRemovePermissionsFromRole = async (req, res) => {
       role: roleId,
       permission: { $in: permissionIds },
     });
+
+    return res.status(200).json({
+      success: true,
+      message: "Permissions removed from role successfully",
+    });
   } catch (error) {
     return res
       .status(500)
