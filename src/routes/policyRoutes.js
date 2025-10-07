@@ -276,13 +276,9 @@ router.post("/version/review", reviewPolicyVersion);
  *             type: object
  *             required:
  *               - versionId
- *               - lastVersionId
  *               - approvedBy
  *             properties:
  *               versionId:
- *                 type: string
- *                 example: 68c2a0c57a438b2a6250fe11\
- *               lastVersionId:
  *                 type: string
  *                 example: 68c2a0c57a438b2a6250fe11
  *               approvedBy:

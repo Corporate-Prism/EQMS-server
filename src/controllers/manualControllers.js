@@ -223,10 +223,12 @@ export const reviewManualVersion = async (req, res) => {
 
 export const approveManualVersion = async (req, res) => {
   try {
-    const { lastVersionId, versionId, approvedBy } = req.body;
+    const { versionId, approvedBy } = req.body;
 
     const version = await ManualVersion.findById(versionId);
-    const lastVersion = await ManualVersion.findById(lastVersionId);
+    const lastVersion = await ManualVersion.findOne({
+      status: "approved",
+    }).sort({ createdAt: -1 });
 
     if (!version) {
       return res
@@ -234,15 +236,9 @@ export const approveManualVersion = async (req, res) => {
         .json({ success: false, message: "Manual version not found" });
     }
 
-    if (!lastVersion) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Manual version not found" });
-    }
-
     version.status = "approved";
     version.approvedBy = approvedBy;
-    lastVersion.status = "archieved";
+    lastVersion.status = "archived";
 
     await version.save();
     await lastVersion.save();

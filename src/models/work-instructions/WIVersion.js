@@ -54,13 +54,7 @@ const WIVersionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: [
-        "draft",
-        "under_review",
-        "under_approval",
-        "approved",
-        "archieved",
-      ],
+      enum: ["draft", "under_review", "under_approval", "approved", "archived"],
       default: "draft",
     },
     nextReviewDate: {

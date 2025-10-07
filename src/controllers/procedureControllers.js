@@ -226,10 +226,12 @@ export const reviewProcedureVersion = async (req, res) => {
 
 export const approveProcedureVersion = async (req, res) => {
   try {
-    const { lastVersionId, versionId, approvedBy } = req.body;
+    const { versionId, approvedBy } = req.body;
 
     const version = await ProcedureVersion.findById(versionId);
-    const lastVersion = await ProcedureVersion.findById(lastVersionId);
+    const lastVersion = await ProcedureVersion.findOne({
+      status: "approved",
+    }).sort({ createdAt: -1 });
 
     if (!version) {
       return res
@@ -237,15 +239,9 @@ export const approveProcedureVersion = async (req, res) => {
         .json({ success: false, message: "Procedure Version not found" });
     }
 
-    if (!lastVersion) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Procedure Version not found" });
-    }
-
     version.status = "approved";
     version.approvedBy = approvedBy;
-    lastVersion.status = "archieved";
+    lastVersion.status = "archived";
 
     await version.save();
     await lastVersion.save();
