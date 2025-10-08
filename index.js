@@ -10,13 +10,14 @@ import otpRoutes from "./src/routes/otpRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
 import rolePermissionRoutes from "./src/routes/RolePermissionRoutes.js";
 import departmentRoutes from "./src/routes/departmentRoutes.js";
-import manualRoutes from "./src/routes/manualRoutes.js";
-import policyRoutes from "./src/routes/policyRoutes.js";
-import procedureRoutes from "./src/routes/procedureRoutes.js";
-import workInstructionRoutes from "./src/routes/workInstructionsRoutes.js";
+import manualRoutes from "./src/routes/document/manualRoutes.js";
+import policyRoutes from "./src/routes/document/policyRoutes.js";
+import procedureRoutes from "./src/routes/document/procedureRoutes.js";
+import workInstructionRoutes from "./src/routes/document/workInstructionsRoutes.js";
 import gptRoutes from "./src/routes/gptRoutes.js";
-import locationRoutes from "./src/routes/locationRoutes.js";
-import equipmentRoutes from "./src/routes/equipmentRoutes.js";
+import locationRoutes from "./src/routes/deviation/locationRoutes.js";
+import equipmentRoutes from "./src/routes/deviation/equipmentRoutes.js";
+import deviationCategoryRoutes from "./src/routes/deviation/deviationCategoryRoutes.js";
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ["./src/routes/*.js"],
+  apis: ["./src/routes/**/*.js"]
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
@@ -66,7 +67,8 @@ app.use("/api/v1/procedures", procedureRoutes);
 app.use("/api/v1/work-instructions", workInstructionRoutes);
 app.use("/api/v1/gpt", gptRoutes);
 app.use("/api/v1/locations", locationRoutes);
-app.use("/api/v1/equpments", equipmentRoutes);
+app.use("/api/v1/equipments", equipmentRoutes);
+app.use("/api/v1/deviationCategories", deviationCategoryRoutes);
 
 app.listen(PORT, () => {
   connectDB();

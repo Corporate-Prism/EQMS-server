@@ -8,7 +8,7 @@ import {
   reviewPolicyVersion,
   approvePolicyVersion,
   getPoliciesByDepartmentId,
-} from "../controllers/policyControllers.js";
+} from "../../controllers/document/policyControllers.js";
 
 const router = express.Router();
 

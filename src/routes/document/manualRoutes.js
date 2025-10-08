@@ -8,7 +8,7 @@ import {
   approveManualVersion,
   getManualVersionById,
   getManualsByDepartmentId,
-} from "../controllers/manualControllers.js";
+} from "../../controllers/document/manualControllers.js";
 
 const router = express.Router();
 

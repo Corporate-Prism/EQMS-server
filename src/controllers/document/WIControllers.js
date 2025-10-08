@@ -1,21 +1,22 @@
-import Policy from "../models/policy/Policy.js";
-import PolicyReview from "../models/policy/PolicyReview.js";
-import PolicyVersion from "../models/policy/PolicyVersion.js";
+import WIVersion from "../../models/work-instructions/WIVersion.js";
+import WorkInstruction from "../../models/work-instructions/WorkInstruction.js";
+import WIReview from "../../models/work-instructions/WIReview.js";
 
-export const createPolicy = async (req, res) => {
+export const createWI = async (req, res) => {
   try {
     const {
-      policyName,
+      workInstructionName,
       department,
       deptCode,
       versionType,
       preparedBy,
       effectiveDate,
-      objective,
+      purpose,
       scope,
-      policies,
+      instructions,
       abbrevations,
       responsibilities,
+      metaData = {},
     } = req.body;
 
     if (!deptCode) {
@@ -25,91 +26,91 @@ export const createPolicy = async (req, res) => {
     }
 
     // 1. Find the last policy for this deptCode
-    const lastPolicy = await Policy.findOne({ deptCode })
+    const lastWI = await WorkInstruction.findOne({ deptCode })
       .sort({ createdAt: -1 })
       .select("referrenceNumber");
 
     let nextNumber = "001";
 
-    if (lastPolicy && lastPolicy.referrenceNumber) {
-      // Extract last number from "POL-{deptCode}-XXX"
-      const lastNum = parseInt(
-        lastPolicy.referrenceNumber.split("-").pop(),
-        10
-      );
+    if (lastWI && lastWI.referrenceNumber) {
+      // Extract last number from "WI-{deptCode}-XXX"
+      const lastNum = parseInt(lastWI.referrenceNumber.split("-").pop(), 10);
       nextNumber = String(lastNum + 1).padStart(3, "0");
     }
 
     // 2. Build reference number
-    const referrenceNumber = `POL-${deptCode}-${nextNumber}`;
+    const referrenceNumber = `WI-${deptCode}-${nextNumber}`;
 
-    const newPolicy = new Policy({
-      policyName,
+    const newWI = new WorkInstruction({
+      workInstructionName,
       department,
       deptCode,
       referrenceNumber,
     });
 
-    const newVersion = new PolicyVersion({
-      policy: newPolicy._id,
+    const newVersion = new WIVersion({
+      workInstruction: newWI._id,
       versionType,
       preparedBy,
       effectiveDate,
-      objective,
+      purpose,
       scope,
-      policies,
+      instructions,
       abbrevations,
       responsibilities,
       status: "under_review",
+      metaData,
     });
 
-    await newPolicy.save();
+    await newWI.save();
     await newVersion.save();
 
-    return res.status(201).json({ success: true, data: newPolicy });
+    return res.status(201).json({ success: true, data: newWI });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const addPolicyVersion = async (req, res) => {
+export const addWIVersion = async (req, res) => {
   try {
     const {
-      policyId,
+      WIid,
       versionType,
       preparedBy,
       effectiveDate,
-      objective,
+      purpose,
       scope,
-      policies,
+      instructions,
       abbrevations,
       responsibilities,
+      metaData = {},
     } = req.body;
 
-    if (!policyId) {
+    if (!WIid) {
       return res
         .status(400)
-        .json({ success: false, message: "Policy ID is required" });
+        .json({ success: false, message: "Work Instruction ID is required" });
     }
 
-    const existingPolicy = await Policy.findById(policyId);
-    if (!existingPolicy) {
+    const existingWI = await WorkInstruction.findById(WIid);
+    if (!existingWI) {
       return res
         .status(404)
-        .json({ success: false, message: "Policy not found" });
+        .json({ success: false, message: "Work Instruction not found" });
     }
 
-    const newVersion = new PolicyVersion({
-      policy: policyId,
+    const newVersion = new WIVersion({
+      workInstruction: WIid,
       versionType,
       preparedBy,
       effectiveDate,
-      objective,
+      purpose,
       scope,
-      policies,
+      instructions,
       abbrevations,
       responsibilities,
       status: "under_review",
+      metaData,
     });
 
     await newVersion.save();
@@ -119,32 +120,36 @@ export const addPolicyVersion = async (req, res) => {
   }
 };
 
-export const getPolicies = async (req, res) => {
+export const getWIs = async (req, res) => {
   try {
-    const policies = await Policy.find().populate("versions");
-    return res.status(200).json({ success: true, data: policies });
+    const WIs = await WorkInstruction.find().populate("versions");
+    return res.status(200).json({ success: true, data: WIs });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getPoliciesByDepartmentId = async (req, res) => {
+export const getWIsByDepartmentId = async (req, res) => {
   try {
     const { departmentId } = req.params;
-    const policies = await Policy.find({ department: departmentId }).populate(
-      "versions"
-    );
-    return res.status(200).json({ success: true, data: policies });
+    const WIs = await WorkInstruction.find({
+      department: departmentId,
+    }).populate("versions");
+    return res.status(200).json({ success: true, data: WIs });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getPolicyVersionsByPolicyId = async (req, res) => {
+export const getWIVersionsByWIId = async (req, res) => {
   try {
-    // const { id } = req.params;
-    // const policy = await Policy.findById(id).populate("versions");
-    const policy = await Policy.findById(req.params.id).populate({
+    const { id } = req.params;
+
+    // const WI = await WorkInstruction.findById(id).populate({
+    //   path: "versions",
+    // });
+
+    const WI = await WorkInstruction.findById(id).populate({
       path: "versions",
       populate: [
         { path: "preparedBy", select: "name email" },
@@ -152,32 +157,34 @@ export const getPolicyVersionsByPolicyId = async (req, res) => {
         {
           path: "reviews",
           populate: { path: "reviewedBy", select: "name email" },
+          options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last review
         },
       ],
     });
 
-    if (!policy) {
+    if (!WI) {
       return res
         .status(404)
-        .json({ success: false, message: "Policy not found" });
+        .json({ success: false, message: "Work Instruction not found" });
     }
 
-    return res.status(200).json({ success: true, data: policy });
+    return res.status(200).json({ success: true, data: WI });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getPolicyVersionById = async (req, res) => {
+export const getWIVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await PolicyVersion.findById(id).populate(
+    const version = await WIVersion.findById(id).populate(
       "reviews preparedBy approvedBy"
     );
     if (!version) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Policy version not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Work Instruction version not found",
+      });
     }
 
     return res.status(200).json({ success: true, data: version });
@@ -186,20 +193,21 @@ export const getPolicyVersionById = async (req, res) => {
   }
 };
 
-export const reviewPolicyVersion = async (req, res) => {
+export const reviewWIVersion = async (req, res) => {
   try {
     const { versionId, reviewedBy, comments, status, nextReviewDate } =
       req.body;
 
-    const version = await PolicyVersion.findById(versionId);
+    const version = await WIVersion.findById(versionId);
     if (!version) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Policy version not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Work Instruction version not found",
+      });
     }
 
-    const newReview = new PolicyReview({
-      policyVersion: versionId,
+    const newReview = new WIReview({
+      wiVersion: versionId,
       reviewedBy,
       comments,
     });
@@ -220,30 +228,31 @@ export const reviewPolicyVersion = async (req, res) => {
   }
 };
 
-export const approvePolicyVersion = async (req, res) => {
+export const approveWIVersion = async (req, res) => {
   try {
     const { versionId, approvedBy } = req.body;
 
-    const version = await PolicyVersion.findById(versionId);
-    const lastVersion = await PolicyVersion.findOne({
-      status: "approved",
-    }).sort({ createdAt: -1 });
+    const version = await WIVersion.findById(versionId);
+    const lastVersion = await WIVersion.findOne({ status: "approved" }).sort({
+      createdAt: -1,
+    });
 
     if (!version) {
       return res
         .status(404)
-        .json({ success: false, message: "Policy Version not found" });
+        .json({ success: false, message: "Work Instrction Version not found" });
     }
 
     version.status = "approved";
     version.approvedBy = approvedBy;
     lastVersion.status = "archived";
+
     await version.save();
     await lastVersion.save();
 
     return res.status(200).json({
       success: true,
-      message: "Manual version approved successfully",
+      message: "Work Instrcution version approved successfully",
       data: version,
     });
   } catch (error) {

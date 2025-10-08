@@ -1,6 +1,6 @@
-import Manual from "../models/manuals/Manual.js";
-import ManualReview from "../models/manuals/ManualReview.js";
-import ManualVersion from "../models/manuals/ManualVersion.js";
+import Manual from "../../models/manuals/Manual.js";
+import ManualReview from "../../models/manuals/ManualReview.js";
+import ManualVersion from "../../models/manuals/ManualVersion.js";
 
 export const createManual = async (req, res) => {
   try {

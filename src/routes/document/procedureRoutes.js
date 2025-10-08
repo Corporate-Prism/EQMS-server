@@ -8,7 +8,7 @@ import {
   reviewProcedureVersion,
   approveProcedureVersion,
   getProceuresByDepartmentId,
-} from "../controllers/procedureControllers.js";
+} from "../../controllers/document/procedureControllers.js";
 
 const router = express.Router();
 

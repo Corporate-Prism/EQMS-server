@@ -1,22 +1,21 @@
-import Procedure from "../models/procedures/Procedure.js";
-import ProcedureVersion from "../models/procedures/ProcedureVersion.js";
-import ProcedureReview from "../models/procedures/ProcedureReview.js";
+import Policy from "../../models/policy/Policy.js";
+import PolicyReview from "../../models/policy/PolicyReview.js";
+import PolicyVersion from "../../models/policy/PolicyVersion.js";
 
-export const createProcedure = async (req, res) => {
+export const createPolicy = async (req, res) => {
   try {
     const {
-      procedureName,
+      policyName,
       department,
       deptCode,
       versionType,
       preparedBy,
       effectiveDate,
-      purpose,
+      objective,
       scope,
-      procedures,
+      policies,
       abbrevations,
       responsibilities,
-      metaData = {},
     } = req.body;
 
     if (!deptCode) {
@@ -26,94 +25,91 @@ export const createProcedure = async (req, res) => {
     }
 
     // 1. Find the last policy for this deptCode
-    const lastProcedure = await Procedure.findOne({ deptCode })
+    const lastPolicy = await Policy.findOne({ deptCode })
       .sort({ createdAt: -1 })
       .select("referrenceNumber");
 
     let nextNumber = "001";
 
-    if (lastProcedure && lastProcedure.referrenceNumber) {
-      // Extract last number from "SOP-{deptCode}-XXX"
+    if (lastPolicy && lastPolicy.referrenceNumber) {
+      // Extract last number from "POL-{deptCode}-XXX"
       const lastNum = parseInt(
-        lastProcedure.referrenceNumber.split("-").pop(),
+        lastPolicy.referrenceNumber.split("-").pop(),
         10
       );
       nextNumber = String(lastNum + 1).padStart(3, "0");
     }
 
     // 2. Build reference number
-    const referrenceNumber = `SOP-${deptCode}-${nextNumber}`;
+    const referrenceNumber = `POL-${deptCode}-${nextNumber}`;
 
-    const newProcedure = new Procedure({
-      procedureName,
+    const newPolicy = new Policy({
+      policyName,
       department,
       deptCode,
       referrenceNumber,
     });
 
-    const newVersion = new ProcedureVersion({
-      procedure: newProcedure._id,
+    const newVersion = new PolicyVersion({
+      policy: newPolicy._id,
       versionType,
       preparedBy,
       effectiveDate,
-      purpose,
+      objective,
       scope,
-      procedures,
+      policies,
       abbrevations,
       responsibilities,
       status: "under_review",
-      metaData,
     });
 
-    await newProcedure.save();
+    await newPolicy.save();
     await newVersion.save();
 
-    return res.status(201).json({ success: true, data: newProcedure });
+    return res.status(201).json({ success: true, data: newPolicy });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const addProcedureVersion = async (req, res) => {
+export const addPolicyVersion = async (req, res) => {
   try {
     const {
-      procedureId,
+      policyId,
       versionType,
       preparedBy,
       effectiveDate,
-      purpose,
+      objective,
       scope,
-      procedures,
+      policies,
       abbrevations,
       responsibilities,
-      metaData = {},
     } = req.body;
 
-    if (!procedureId) {
+    if (!policyId) {
       return res
         .status(400)
-        .json({ success: false, message: "PROCEDURE ID is required" });
+        .json({ success: false, message: "Policy ID is required" });
     }
 
-    const existingProcedure = await Procedure.findById(procedureId);
-    if (!existingProcedure) {
+    const existingPolicy = await Policy.findById(policyId);
+    if (!existingPolicy) {
       return res
         .status(404)
-        .json({ success: false, message: "Procedure not found" });
+        .json({ success: false, message: "Policy not found" });
     }
 
-    const newVersion = new ProcedureVersion({
-      procedure: procedureId,
+    const newVersion = new PolicyVersion({
+      policy: policyId,
       versionType,
       preparedBy,
       effectiveDate,
-      purpose,
+      objective,
       scope,
-      procedures,
+      policies,
       abbrevations,
       responsibilities,
       status: "under_review",
-      metaData,
     });
 
     await newVersion.save();
@@ -123,32 +119,32 @@ export const addProcedureVersion = async (req, res) => {
   }
 };
 
-export const getProcedures = async (req, res) => {
+export const getPolicies = async (req, res) => {
   try {
-    const procedures = await Procedure.find().populate("versions");
-    return res.status(200).json({ success: true, data: procedures });
+    const policies = await Policy.find().populate("versions");
+    return res.status(200).json({ success: true, data: policies });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getProceuresByDepartmentId = async (req, res) => {
+export const getPoliciesByDepartmentId = async (req, res) => {
   try {
     const { departmentId } = req.params;
-    const procedures = await Procedure.find({
-      department: departmentId,
-    }).populate("versions");
-    return res.status(200).json({ success: true, data: procedures });
+    const policies = await Policy.find({ department: departmentId }).populate(
+      "versions"
+    );
+    return res.status(200).json({ success: true, data: policies });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getProcedureVersionsByProcedureId = async (req, res) => {
+export const getPolicyVersionsByPolicyId = async (req, res) => {
   try {
-    const { id } = req.params;
-    // const procedure = await Procedure.findById(id).populate("versions");
-    const procedure = await Procedure.findById(req.params.id).populate({
+    // const { id } = req.params;
+    // const policy = await Policy.findById(id).populate("versions");
+    const policy = await Policy.findById(req.params.id).populate({
       path: "versions",
       populate: [
         { path: "preparedBy", select: "name email" },
@@ -160,28 +156,28 @@ export const getProcedureVersionsByProcedureId = async (req, res) => {
       ],
     });
 
-    if (!procedure) {
+    if (!policy) {
       return res
         .status(404)
-        .json({ success: false, message: "Procedure not found" });
+        .json({ success: false, message: "Policy not found" });
     }
 
-    return res.status(200).json({ success: true, data: procedure });
+    return res.status(200).json({ success: true, data: policy });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getProcedureVersionById = async (req, res) => {
+export const getPolicyVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await ProcedureVersion.findById(id).populate(
+    const version = await PolicyVersion.findById(id).populate(
       "reviews preparedBy approvedBy"
     );
     if (!version) {
       return res
         .status(404)
-        .json({ success: false, message: "Procedure version not found" });
+        .json({ success: false, message: "Policy version not found" });
     }
 
     return res.status(200).json({ success: true, data: version });
@@ -190,20 +186,20 @@ export const getProcedureVersionById = async (req, res) => {
   }
 };
 
-export const reviewProcedureVersion = async (req, res) => {
+export const reviewPolicyVersion = async (req, res) => {
   try {
     const { versionId, reviewedBy, comments, status, nextReviewDate } =
       req.body;
 
-    const version = await ProcedureVersion.findById(versionId);
+    const version = await PolicyVersion.findById(versionId);
     if (!version) {
       return res
         .status(404)
-        .json({ success: false, message: "Procedure version not found" });
+        .json({ success: false, message: "Policy version not found" });
     }
 
-    const newReview = new ProcedureReview({
-      procedureVersion: versionId,
+    const newReview = new PolicyReview({
+      policyVersion: versionId,
       reviewedBy,
       comments,
     });
@@ -224,31 +220,30 @@ export const reviewProcedureVersion = async (req, res) => {
   }
 };
 
-export const approveProcedureVersion = async (req, res) => {
+export const approvePolicyVersion = async (req, res) => {
   try {
     const { versionId, approvedBy } = req.body;
 
-    const version = await ProcedureVersion.findById(versionId);
-    const lastVersion = await ProcedureVersion.findOne({
+    const version = await PolicyVersion.findById(versionId);
+    const lastVersion = await PolicyVersion.findOne({
       status: "approved",
     }).sort({ createdAt: -1 });
 
     if (!version) {
       return res
         .status(404)
-        .json({ success: false, message: "Procedure Version not found" });
+        .json({ success: false, message: "Policy Version not found" });
     }
 
     version.status = "approved";
     version.approvedBy = approvedBy;
     lastVersion.status = "archived";
-
     await version.save();
     await lastVersion.save();
 
     return res.status(200).json({
       success: true,
-      message: "Procedure version approved successfully",
+      message: "Manual version approved successfully",
       data: version,
     });
   } catch (error) {

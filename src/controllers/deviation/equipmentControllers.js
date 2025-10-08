@@ -1,4 +1,4 @@
-import Equipment from "../models/deviation/Equipment.js";
+import Equipment from "../../models/deviation/Equipment.js";
 
 export const addNewEquipment = async (req, res) => {
     try {
