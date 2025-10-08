@@ -252,3 +252,44 @@ export const approveManualVersion = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const editManualVersion = async (req, res) => {
+  try {
+    const { versionId } = req.params;
+    const updateData = req.body;
+
+    // Check if the manual version exists
+    const existingVersion = await ManualVersion.findById(versionId);
+    if (!existingVersion) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Manual version not found" });
+    }
+
+    // Prevent editing approved or archived versions
+    if (
+      existingVersion.status === "approved" ||
+      existingVersion.status === "archived"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot edit approved or archived manual versions",
+      });
+    }
+
+    // Update the manual version
+    const updatedVersion = await ManualVersion.findByIdAndUpdate(
+      versionId,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate("preparedBy approvedBy", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Manual version updated successfully",
+      data: updatedVersion,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
