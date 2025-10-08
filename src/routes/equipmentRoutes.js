@@ -1,15 +1,15 @@
 import express from "express";
-import { addNewLocation, deleteLocation, getAllLocations, getLocationById, updateLocation } from "../controllers/locationControllers.js";
+import { addNewEquipment, deleteEquipment, getAllEquipments, getEquipmentById, updateEquipment } from "../controllers/equipmentControllers.js";
 
 const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/locations/newLocation:
+ * /api/v1/equipments/newEquipment:
  *   post:
- *     summary: Create a new location
- *     tags: [Locations]
- *     description: Add a new location to the system
+ *     summary: Create a new equipment
+ *     tags: [Equipments]
+ *     description: Add a new equipment to the system
  *     requestBody:
  *       required: true
  *       content:
@@ -17,101 +17,101 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               locationName:
+ *               equipmentName:
  *                 type: string
  *                 required: true
- *                 example: Production floor
- *               locationCode:
+ *                 example: Weight machine
+ *               equipmentCode:
  *                 type: string
  *                 required: true
- *                 example: PF
+ *                 example: WM
  *               departmentId:
  *                 type: string
  *                 required: true
  *     responses:
  *       201:
- *         description: Location created successfully
+ *         description: Equipment created successfully
  *       400:
  *         description: Bad request
  *       500:
  *         description: Internal server error
  */
-router.post("/newLocation", addNewLocation);
+router.post("/newEquipment", addNewEquipment);
 
 /**
  * @swagger
- * /api/v1/locations:
+ * /api/v1/equipments:
  *   get:
- *     summary: Retrieve all locations
- *     tags: [Locations]
- *     description: Fetch a list of all locations with optional search filtering by name or code.
+ *     summary: Retrieve all equipments
+ *     tags: [Equipments]
+ *     description: Fetch a list of all equipments with optional search filtering by name or code.
  *     parameters:
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Search term to filter locations by name or code.
+ *         description: Search term to filter equipments by name or code.
  *     responses:
  *       200:
- *         description: Locations retrieved successfully
+ *         description: Equipments retrieved successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 locations:
+ *                 equipments:
  *                   type: array
  *                   items:
  *                     type: object
  *                     properties:
  *                       _id:
  *                         type: string
- *                       locationName:
+ *                       equipmentName:
  *                         type: string
- *                       locationCode:
+ *                       equipmentCode:
  *                         type: string
  *                       departmentId:
  *                         type: string
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllLocations);
+router.get("/", getAllEquipments);
 
 /**
  * @swagger
- * /api/v1/locations/{id}:
+ * /api/v1/equipments/{id}:
  *   get:
- *     summary: Retrieve location using location id
- *     tags: [Locations]
- *     description: Fetch a location using location id
+ *     summary: Retrieve equipment using equipment id
+ *     tags: [Equipments]
+ *     description: Fetch a equipment using equipment id
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The ID of the location to fetch
+ *         description: The ID of the equipment to fetch
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Location retrieved successfully
+ *         description: Equipment retrieved successfully
  *         content:
  *       500:
  *         description: Internal server error
  */
-router.get("/:id", getLocationById);
+router.get("/:id", getEquipmentById);
 
 /**
  * @swagger
- * /api/v1/locations/update/{id}:
+ * /api/v1/equipments/update/{id}:
  *   put:
- *     summary: Update location by ID
- *     tags: [Locations]
- *     description: Update a location by its ID
+ *     summary: Update equipment by ID
+ *     tags: [Equipments]
+ *     description: Update a equipment by its ID
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The ID of the location to update
+ *         description: The ID of the equipment to update
  *         schema:
  *           type: string
  *     requestBody:
@@ -121,43 +121,43 @@ router.get("/:id", getLocationById);
  *           schema:
  *             type: object
  *             properties:
- *               locationName:
+ *               equipmentName:
  *                 type: string
- *                 example: Production Floor
+ *                 example: Weight machine
  *     responses:
  *       200:
- *         description: Location updated successfully
+ *         description: Equipment updated successfully
  *       400:
  *         description: Bad request
  *       404:
- *         description: Location not found
+ *         description: Equipment not found
  *       500:
  *         description: Internal server error
  */
-router.put("/update/:id", updateLocation);
+router.put("/update/:id", updateEquipment);
 
 /**
  * @swagger
- * /api/v1/locations/{id}:
+ * /api/v1/equipments/{id}:
  *   delete:
- *     summary: Delete location by ID
- *     tags: [Locations]
- *     description: Delete a location by its ID
+ *     summary: Delete equipment by ID
+ *     tags: [Equipments]
+ *     description: Delete a equipment by its ID
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The ID of the location to delete
+ *         description: The ID of the equipment to delete
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: location deleted successfully
+ *         description: equipment deleted successfully
  *       404:
- *         description: location not found
+ *         description: equipment not found
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", deleteLocation);
+router.delete("/:id", deleteEquipment);
 
 export default router;

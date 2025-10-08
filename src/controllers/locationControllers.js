@@ -1,4 +1,4 @@
-import Location from "../models/Location.js";
+import Location from "../models/deviation/Location.js";
 
 export const addNewLocation = async (req, res) => {
     try {
@@ -35,7 +35,7 @@ export const getAllLocations = async (req, res) => {
                 { locationCode: { $regex: search, $options: "i" } }
             ];
         }
-        const locations = await Location.find(query).sort({ createdAt: -1 });
+        const locations = await Location.find(query).populate("departmentId").sort({ createdAt: -1 });
         return res.status(200).json({ locations });
     } catch (error) {
         return res
@@ -47,7 +47,7 @@ export const getAllLocations = async (req, res) => {
 export const getLocationById = async (req, res) => {
     try {
         const { id } = req.params;
-        const location = await Location.findById(id);
+        const location = await Location.findById(id).populate("departmentId");
         if (!location) return res.status(404).json({ message: "Location not found" });
         return res.status(200).json({ location });
     } catch (error) {
