@@ -15,6 +15,8 @@ import policyRoutes from "./src/routes/policyRoutes.js";
 import procedureRoutes from "./src/routes/procedureRoutes.js";
 import workInstructionRoutes from "./src/routes/workInstructionsRoutes.js";
 import gptRoutes from "./src/routes/gptRoutes.js";
+import locationRoutes from "./src/routes/locationRoutes.js";
+import equipmentRoutes from "./src/routes/equipmentRoutes.js";
 
 dotenv.config();
 
@@ -63,6 +65,8 @@ app.use("/api/v1/policies", policyRoutes);
 app.use("/api/v1/procedures", procedureRoutes);
 app.use("/api/v1/work-instructions", workInstructionRoutes);
 app.use("/api/v1/gpt", gptRoutes);
+app.use("/api/v1/locations", locationRoutes);
+app.use("/api/v1/equpments", equipmentRoutes);
 
 app.listen(PORT, () => {
   connectDB();
