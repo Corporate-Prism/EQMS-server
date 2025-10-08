@@ -250,3 +250,44 @@ export const approvePolicyVersion = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const editPolicyVersion = async (req, res) => {
+  try {
+    const { versionId } = req.params;
+    const updateData = req.body;
+
+    // Check if the policy version exists
+    const existingVersion = await PolicyVersion.findById(versionId);
+    if (!existingVersion) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy version not found" });
+    }
+
+    // Prevent editing approved or archived versions
+    if (
+      existingVersion.status === "approved" ||
+      existingVersion.status === "archived"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot edit approved or archived policy versions",
+      });
+    }
+
+    // Update the policy version
+    const updatedVersion = await PolicyVersion.findByIdAndUpdate(
+      versionId,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate("preparedBy approvedBy", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Policy version updated successfully",
+      data: updatedVersion,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

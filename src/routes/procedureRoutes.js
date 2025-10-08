@@ -8,6 +8,7 @@ import {
   reviewProcedureVersion,
   approveProcedureVersion,
   getProceuresByDepartmentId,
+  editProcedureVersion,
 } from "../controllers/procedureControllers.js";
 
 const router = express.Router();
@@ -304,5 +305,68 @@ router.post("/version/review", reviewProcedureVersion);
  *         description: Internal server error
  */
 router.post("/version/approve", approveProcedureVersion);
+
+/**
+ * @swagger
+ * /api/v1/procedures/version/{versionId}:
+ *   put:
+ *     summary: Edit a procedure version
+ *     tags: [Procedures]
+ *     parameters:
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Procedure Version ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               versionType:
+ *                 type: string
+ *                 enum: [minor, major]
+ *                 example: minor
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2025-10-01
+ *               purpose:
+ *                 type: string
+ *                 example: Updated purpose for the procedure
+ *               scope:
+ *                 type: string
+ *                 example: Updated scope description
+ *               procedures:
+ *                 type: string
+ *                 example: Updated procedure steps
+ *               abbrevations:
+ *                 type: string
+ *                 example: Updated abbreviations list
+ *               responsibilities:
+ *                 type: string
+ *                 example: Updated responsibilities section
+ *               metaData:
+ *                 type: object
+ *                 additionalProperties: true
+ *                 description: Dynamic fields (key-value pairs) that may vary
+ *                 example:
+ *                   inspectionInterval: Weekly
+ *                   reviewer: Jane Smith
+ *                   versionNotes: Updated safety protocols
+ *     responses:
+ *       200:
+ *         description: Procedure version updated successfully
+ *       400:
+ *         description: Cannot edit approved or archived procedure versions
+ *       404:
+ *         description: Procedure version not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/version/:versionId", editProcedureVersion);
 
 export default router;

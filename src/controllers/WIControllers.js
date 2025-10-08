@@ -259,3 +259,45 @@ export const approveWIVersion = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const editWIVersion = async (req, res) => {
+  try {
+    const { versionId } = req.params;
+    const updateData = req.body;
+
+    // Check if the work instruction version exists
+    const existingVersion = await WIVersion.findById(versionId);
+    if (!existingVersion) {
+      return res.status(404).json({
+        success: false,
+        message: "Work instruction version not found",
+      });
+    }
+
+    // Prevent editing approved or archived versions
+    if (
+      existingVersion.status === "approved" ||
+      existingVersion.status === "archived"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot edit approved or archived work instruction versions",
+      });
+    }
+
+    // Update the work instruction version
+    const updatedVersion = await WIVersion.findByIdAndUpdate(
+      versionId,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate("preparedBy approvedBy", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Work instruction version updated successfully",
+      data: updatedVersion,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
