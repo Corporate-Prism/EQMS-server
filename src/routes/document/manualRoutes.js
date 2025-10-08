@@ -8,6 +8,7 @@ import {
   approveManualVersion,
   getManualVersionById,
   getManualsByDepartmentId,
+  editManualVersion,
 } from "../../controllers/document/manualControllers.js";
 
 const router = express.Router();
@@ -352,5 +353,63 @@ router.post("/review", reviewManualVersion);
  *         description: Server error
  */
 router.post("/approve", approveManualVersion);
+
+/**
+ * @swagger
+ * /api/v1/policies/version/{versionId}:
+ *   put:
+ *     summary: Edit a policy version
+ *     tags: [Policies]
+ *     parameters:
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Policy Version ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               versionType:
+ *                 type: string
+ *                 enum: [minor, major]
+ *                 example: minor
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2025-10-01
+ *               introduction:
+ *                 type: string
+ *                 example: Updated introduction for the manual
+ *               objective:
+ *                 type: string
+ *                 example: Updated objective for the manual
+ *               purpose:
+ *                 type: string
+ *                 example: Updated purpose section
+ *               scope:
+ *                 type: string
+ *                 example: Updated scope description
+ *               policyStatement:
+ *                 type: string
+ *                 example: Updated policy content
+ *               OrganizationalStructure:
+ *                 type: string
+ *                 example: Updated abbreviations list
+ *     responses:
+ *       200:
+ *         description: manual version updated successfully
+ *       400:
+ *         description: Cannot edit approved or archived manual versions
+ *       404:
+ *         description: manual version not found
+ *       500:
+ *         description: Server error
+ */
+router.put("/version/:versionId", editManualVersion);
 
 export default router;

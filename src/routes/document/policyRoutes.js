@@ -8,6 +8,7 @@ import {
   reviewPolicyVersion,
   approvePolicyVersion,
   getPoliciesByDepartmentId,
+  editPolicyVersion,
 } from "../../controllers/document/policyControllers.js";
 
 const router = express.Router();
@@ -293,5 +294,60 @@ router.post("/version/review", reviewPolicyVersion);
  *         description: Server error
  */
 router.post("/version/approve", approvePolicyVersion);
+
+/**
+ * @swagger
+ * /api/v1/policies/version/{versionId}:
+ *   put:
+ *     summary: Edit a policy version
+ *     tags: [Policies]
+ *     parameters:
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Policy Version ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               versionType:
+ *                 type: string
+ *                 enum: [minor, major]
+ *                 example: minor
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2025-10-01
+ *               objective:
+ *                 type: string
+ *                 example: Updated objective for the policy
+ *               scope:
+ *                 type: string
+ *                 example: Updated scope description
+ *               policies:
+ *                 type: string
+ *                 example: Updated policy content
+ *               abbrevations:
+ *                 type: string
+ *                 example: Updated abbreviations list
+ *               responsibilities:
+ *                 type: string
+ *                 example: Updated responsibilities section
+ *     responses:
+ *       200:
+ *         description: Policy version updated successfully
+ *       400:
+ *         description: Cannot edit approved or archived policy versions
+ *       404:
+ *         description: Policy version not found
+ *       500:
+ *         description: Server error
+ */
+router.put("/version/:versionId", editPolicyVersion);
 
 export default router;

@@ -8,6 +8,7 @@ import {
   reviewWIVersion,
   approveWIVersion,
   getWIsByDepartmentId,
+  editWIVersion,
 } from "../../controllers/document/WIControllers.js";
 
 const router = express.Router();
@@ -286,7 +287,79 @@ router.post("/version/review", reviewWIVersion);
  *               approvedBy:
  *                 type: string
  *                 example: 68b000c139451ac7e97cdbf3
+ *     responses:
+ *       200:
+ *         description: Work Instruction version approved successfully
+ *       404:
+ *         description: Work Instruction version not found
+ *       500:
+ *         description: Internal server error
  */
 router.post("/version/approve", approveWIVersion);
+
+/**
+ * @swagger
+ * /api/v1/work-instructions/version/{versionId}:
+ *   put:
+ *     summary: Edit a work instruction version
+ *     tags: [WorkInstructions]
+ *     parameters:
+ *       - in: path
+ *         name: versionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Work Instruction Version ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               versionType:
+ *                 type: string
+ *                 enum: [minor, major]
+ *                 example: minor
+ *               effectiveDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2025-10-01
+ *               purpose:
+ *                 type: string
+ *                 example: Updated purpose for the work instruction
+ *               scope:
+ *                 type: string
+ *                 example: Updated scope description
+ *               instructions:
+ *                 type: string
+ *                 example: Updated instruction steps
+ *               abbrevations:
+ *                 type: string
+ *                 example: Updated abbreviations list
+ *               responsibilities:
+ *                 type: string
+ *                 example: Updated responsibilities section
+ *               metaData:
+ *                 type: object
+ *                 additionalProperties: true
+ *                 description: Dynamic fields (key-value pairs) that may vary
+ *                 example:
+ *                   safetyLevel: Critical
+ *                   requiresPPE: true
+ *                   machineType: CNC
+ *                   inspector: John Doe
+ *                   revisionReason: Updated safety protocols
+ *     responses:
+ *       200:
+ *         description: Work instruction version updated successfully
+ *       400:
+ *         description: Cannot edit approved or archived work instruction versions
+ *       404:
+ *         description: Work instruction version not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/version/:versionId", editWIVersion);
 
 export default router;
