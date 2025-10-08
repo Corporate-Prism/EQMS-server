@@ -1,4 +1,4 @@
-import Location from "../models/deviation/Location.js";
+import Location from "../../models/deviation/Location.js";
 
 export const addNewLocation = async (req, res) => {
     try {

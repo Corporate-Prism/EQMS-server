@@ -8,7 +8,7 @@ import {
   reviewWIVersion,
   approveWIVersion,
   getWIsByDepartmentId,
-} from "../controllers/WIControllers.js";
+} from "../../controllers/document/WIControllers.js";
 
 const router = express.Router();
 

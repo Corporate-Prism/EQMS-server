@@ -1,11 +1,11 @@
-import WIVersion from "../models/work-instructions/WIVersion.js";
-import WorkInstruction from "../models/work-instructions/WorkInstruction.js";
-import WIReview from "../models/work-instructions/WIReview.js";
+import Procedure from "../../models/procedures/Procedure.js";
+import ProcedureVersion from "../../models/procedures/ProcedureVersion.js";
+import ProcedureReview from "../../models/procedures/ProcedureReview.js";
 
-export const createWI = async (req, res) => {
+export const createProcedure = async (req, res) => {
   try {
     const {
-      workInstructionName,
+      procedureName,
       department,
       deptCode,
       versionType,
@@ -13,7 +13,7 @@ export const createWI = async (req, res) => {
       effectiveDate,
       purpose,
       scope,
-      instructions,
+      procedures,
       abbrevations,
       responsibilities,
       metaData = {},
@@ -26,87 +26,90 @@ export const createWI = async (req, res) => {
     }
 
     // 1. Find the last policy for this deptCode
-    const lastWI = await WorkInstruction.findOne({ deptCode })
+    const lastProcedure = await Procedure.findOne({ deptCode })
       .sort({ createdAt: -1 })
       .select("referrenceNumber");
 
     let nextNumber = "001";
 
-    if (lastWI && lastWI.referrenceNumber) {
-      // Extract last number from "WI-{deptCode}-XXX"
-      const lastNum = parseInt(lastWI.referrenceNumber.split("-").pop(), 10);
+    if (lastProcedure && lastProcedure.referrenceNumber) {
+      // Extract last number from "SOP-{deptCode}-XXX"
+      const lastNum = parseInt(
+        lastProcedure.referrenceNumber.split("-").pop(),
+        10
+      );
       nextNumber = String(lastNum + 1).padStart(3, "0");
     }
 
     // 2. Build reference number
-    const referrenceNumber = `WI-${deptCode}-${nextNumber}`;
+    const referrenceNumber = `SOP-${deptCode}-${nextNumber}`;
 
-    const newWI = new WorkInstruction({
-      workInstructionName,
+    const newProcedure = new Procedure({
+      procedureName,
       department,
       deptCode,
       referrenceNumber,
     });
 
-    const newVersion = new WIVersion({
-      workInstruction: newWI._id,
+    const newVersion = new ProcedureVersion({
+      procedure: newProcedure._id,
       versionType,
       preparedBy,
       effectiveDate,
       purpose,
       scope,
-      instructions,
+      procedures,
       abbrevations,
       responsibilities,
       status: "under_review",
       metaData,
     });
 
-    await newWI.save();
+    await newProcedure.save();
     await newVersion.save();
 
-    return res.status(201).json({ success: true, data: newWI });
+    return res.status(201).json({ success: true, data: newProcedure });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const addWIVersion = async (req, res) => {
+export const addProcedureVersion = async (req, res) => {
   try {
     const {
-      WIid,
+      procedureId,
       versionType,
       preparedBy,
       effectiveDate,
       purpose,
       scope,
-      instructions,
+      procedures,
       abbrevations,
       responsibilities,
       metaData = {},
     } = req.body;
 
-    if (!WIid) {
+    if (!procedureId) {
       return res
         .status(400)
-        .json({ success: false, message: "Work Instruction ID is required" });
+        .json({ success: false, message: "PROCEDURE ID is required" });
     }
 
-    const existingWI = await WorkInstruction.findById(WIid);
-    if (!existingWI) {
+    const existingProcedure = await Procedure.findById(procedureId);
+    if (!existingProcedure) {
       return res
         .status(404)
-        .json({ success: false, message: "Work Instruction not found" });
+        .json({ success: false, message: "Procedure not found" });
     }
 
-    const newVersion = new WIVersion({
-      workInstruction: WIid,
+    const newVersion = new ProcedureVersion({
+      procedure: procedureId,
       versionType,
       preparedBy,
       effectiveDate,
       purpose,
       scope,
-      instructions,
+      procedures,
       abbrevations,
       responsibilities,
       status: "under_review",
@@ -120,36 +123,32 @@ export const addWIVersion = async (req, res) => {
   }
 };
 
-export const getWIs = async (req, res) => {
+export const getProcedures = async (req, res) => {
   try {
-    const WIs = await WorkInstruction.find().populate("versions");
-    return res.status(200).json({ success: true, data: WIs });
+    const procedures = await Procedure.find().populate("versions");
+    return res.status(200).json({ success: true, data: procedures });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getWIsByDepartmentId = async (req, res) => {
+export const getProceuresByDepartmentId = async (req, res) => {
   try {
     const { departmentId } = req.params;
-    const WIs = await WorkInstruction.find({
+    const procedures = await Procedure.find({
       department: departmentId,
     }).populate("versions");
-    return res.status(200).json({ success: true, data: WIs });
+    return res.status(200).json({ success: true, data: procedures });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getWIVersionsByWIId = async (req, res) => {
+export const getProcedureVersionsByProcedureId = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // const WI = await WorkInstruction.findById(id).populate({
-    //   path: "versions",
-    // });
-
-    const WI = await WorkInstruction.findById(id).populate({
+    // const procedure = await Procedure.findById(id).populate("versions");
+    const procedure = await Procedure.findById(req.params.id).populate({
       path: "versions",
       populate: [
         { path: "preparedBy", select: "name email" },
@@ -157,34 +156,32 @@ export const getWIVersionsByWIId = async (req, res) => {
         {
           path: "reviews",
           populate: { path: "reviewedBy", select: "name email" },
-          options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last review
         },
       ],
     });
 
-    if (!WI) {
+    if (!procedure) {
       return res
         .status(404)
-        .json({ success: false, message: "Work Instruction not found" });
+        .json({ success: false, message: "Procedure not found" });
     }
 
-    return res.status(200).json({ success: true, data: WI });
+    return res.status(200).json({ success: true, data: procedure });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const getWIVersionById = async (req, res) => {
+export const getProcedureVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await WIVersion.findById(id).populate(
+    const version = await ProcedureVersion.findById(id).populate(
       "reviews preparedBy approvedBy"
     );
     if (!version) {
-      return res.status(404).json({
-        success: false,
-        message: "Work Instruction version not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Procedure version not found" });
     }
 
     return res.status(200).json({ success: true, data: version });
@@ -193,21 +190,20 @@ export const getWIVersionById = async (req, res) => {
   }
 };
 
-export const reviewWIVersion = async (req, res) => {
+export const reviewProcedureVersion = async (req, res) => {
   try {
     const { versionId, reviewedBy, comments, status, nextReviewDate } =
       req.body;
 
-    const version = await WIVersion.findById(versionId);
+    const version = await ProcedureVersion.findById(versionId);
     if (!version) {
-      return res.status(404).json({
-        success: false,
-        message: "Work Instruction version not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Procedure version not found" });
     }
 
-    const newReview = new WIReview({
-      wiVersion: versionId,
+    const newReview = new ProcedureReview({
+      procedureVersion: versionId,
       reviewedBy,
       comments,
     });
@@ -228,19 +224,19 @@ export const reviewWIVersion = async (req, res) => {
   }
 };
 
-export const approveWIVersion = async (req, res) => {
+export const approveProcedureVersion = async (req, res) => {
   try {
     const { versionId, approvedBy } = req.body;
 
-    const version = await WIVersion.findById(versionId);
-    const lastVersion = await WIVersion.findOne({ status: "approved" }).sort({
-      createdAt: -1,
-    });
+    const version = await ProcedureVersion.findById(versionId);
+    const lastVersion = await ProcedureVersion.findOne({
+      status: "approved",
+    }).sort({ createdAt: -1 });
 
     if (!version) {
       return res
         .status(404)
-        .json({ success: false, message: "Work Instrction Version not found" });
+        .json({ success: false, message: "Procedure Version not found" });
     }
 
     version.status = "approved";
@@ -252,7 +248,7 @@ export const approveWIVersion = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Work Instrcution version approved successfully",
+      message: "Procedure version approved successfully",
       data: version,
     });
   } catch (error) {
