@@ -356,7 +356,7 @@ router.post("/approve", approveManualVersion);
 
 /**
  * @swagger
- * /api/v1/policies/version/{versionId}:
+ * /api/v1/manuals/version/{versionId}:
  *   put:
  *     summary: Edit a policy version
  *     tags: [Policies]
