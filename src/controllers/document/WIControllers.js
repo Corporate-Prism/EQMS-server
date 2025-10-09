@@ -177,9 +177,19 @@ export const getWIVersionsByWIId = async (req, res) => {
 export const getWIVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await WIVersion.findById(id).populate(
-      "reviews preparedBy approvedBy"
-    );
+    // const version = await WIVersion.findById(id).populate(
+    //   "reviews preparedBy approvedBy"
+    // );
+
+    const version = await WIVersion.findById(req.params.id).populate([
+      { path: "preparedBy" },
+      { path: "approvedBy" },
+      {
+        path: "reviews",
+        populate: { path: "reviewedBy" },
+      },
+    ]);
+
     if (!version) {
       return res.status(404).json({
         success: false,
