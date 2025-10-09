@@ -2,15 +2,11 @@ import Location from "../../models/deviation/Location.js";
 
 export const addNewLocation = async (req, res) => {
     try {
-        const { locationName, locationCode, departmentId } = req.body;
-        if (!locationName || !locationCode || !departmentId) return res.status(400).json({ message: "All fields are required" });
-        const existing = await Location.findOne({ locationCode });
-        if (existing) return res.status(400).json({ message: "Location code already exists." });
-
+        const { locationName,  department} = req.body;
+        if (!locationName || !department) return res.status(400).json({ message: "All fields are required" });
         const location = await Location.create({
             locationName,
-            locationCode,
-            departmentId,
+            department,
         });
         return res
             .status(201)
@@ -35,7 +31,7 @@ export const getAllLocations = async (req, res) => {
                 { locationCode: { $regex: search, $options: "i" } }
             ];
         }
-        const locations = await Location.find(query).populate("departmentId").sort({ createdAt: -1 });
+        const locations = await Location.find(query).populate("department").sort({ createdAt: -1 });
         return res.status(200).json({ locations });
     } catch (error) {
         return res
@@ -47,7 +43,7 @@ export const getAllLocations = async (req, res) => {
 export const getLocationById = async (req, res) => {
     try {
         const { id } = req.params;
-        const location = await Location.findById(id).populate("departmentId");
+        const location = await Location.findById(id).populate("department");
         if (!location) return res.status(404).json({ message: "Location not found" });
         return res.status(200).json({ location });
     } catch (error) {
