@@ -171,9 +171,19 @@ export const getPolicyVersionsByPolicyId = async (req, res) => {
 export const getPolicyVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await PolicyVersion.findById(id).populate(
-      "reviews preparedBy approvedBy"
-    );
+    // const version = await PolicyVersion.findById(id).populate(
+    //   "reviews preparedBy approvedBy"
+    // );
+
+    const version = await PolicyVersion.findById(req.params.id).populate([
+      { path: "preparedBy" },
+      { path: "approvedBy" },
+      {
+        path: "reviews",
+        populate: { path: "reviewedBy" },
+      },
+    ]);
+
     if (!version) {
       return res
         .status(404)

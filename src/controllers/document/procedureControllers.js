@@ -175,9 +175,19 @@ export const getProcedureVersionsByProcedureId = async (req, res) => {
 export const getProcedureVersionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const version = await ProcedureVersion.findById(id).populate(
-      "reviews preparedBy approvedBy"
-    );
+    // const version = await ProcedureVersion.findById(id).populate(
+    //   "reviews preparedBy approvedBy"
+    // );
+
+    const version = await ProcedureVersion.findById(req.params.id).populate([
+      { path: "preparedBy" },
+      { path: "approvedBy" },
+      {
+        path: "reviews",
+        populate: { path: "reviewedBy" },
+      },
+    ]);
+
     if (!version) {
       return res
         .status(404)

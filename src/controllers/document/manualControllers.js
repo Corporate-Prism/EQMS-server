@@ -165,9 +165,19 @@ export const getManualVersionsByManualId = async (req, res) => {
 
 export const getManualVersionById = async (req, res) => {
   try {
-    const version = await ManualVersion.findById(req.params.id).populate(
-      "reviews preparedBy approvedBy"
-    );
+    // const version = await ManualVersion.findById(req.params.id).populate(
+    //   "reviews preparedBy approvedBy"
+    // );
+
+    const version = await ManualVersion.findById(req.params.id).populate([
+      { path: "preparedBy" },
+      { path: "approvedBy" },
+      {
+        path: "reviews",
+        populate: { path: "reviewedBy" },
+      },
+    ]);
+
     if (!version) {
       return res
         .status(404)
