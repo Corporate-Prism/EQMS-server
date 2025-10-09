@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Department from "../Department.js";
 
-const locationSchema = new mongoose.Schema(
+const LocationSchema = new mongoose.Schema(
   {
     locationName: {
       type: String,
@@ -21,13 +21,24 @@ const locationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-locationSchema.pre("save", async function (next) {
+LocationSchema.pre("save", async function (next) {
   if (this.locationCode) return next();
+
   try {
     const department = await Department.findById(this.department);
     if (!department) throw new Error("Department not found");
-    const prefix = department.departmentName.substring(0, 3).toUpperCase();
-    const count = await mongoose.model("Location").countDocuments({ department: this.department });
+    let prefix = department.departmentName.substring(0, 3).toUpperCase();
+    const otherDepts = await Department.find({
+      _id: { $ne: this.department },
+      departmentName: { $regex: new RegExp(`^${prefix}`, "i") },
+    });
+    if (otherDepts.length > 0) {
+      const randomNum = Math.floor(100 + Math.random() * 900);
+      prefix = `${prefix}${randomNum}`;
+    }
+    const count = await mongoose
+      .model("Location")
+      .countDocuments({ department: this.department });
     this.locationCode = `${prefix}-LOC${String(count + 1).padStart(3, "0")}`;
     next();
   } catch (err) {
@@ -35,5 +46,5 @@ locationSchema.pre("save", async function (next) {
   }
 });
 
-const Location = mongoose.model("Location", locationSchema);
+const Location = mongoose.model("Location", LocationSchema);
 export default Location;

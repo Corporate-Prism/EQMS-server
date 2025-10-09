@@ -18,6 +18,7 @@ import gptRoutes from "./src/routes/gptRoutes.js";
 import locationRoutes from "./src/routes/deviation/locationRoutes.js";
 import equipmentRoutes from "./src/routes/deviation/equipmentRoutes.js";
 import deviationCategoryRoutes from "./src/routes/deviation/deviationCategoryRoutes.js";
+import questionRoutes from "./src/routes/questionRoutes.js";
 
 dotenv.config();
 
@@ -69,6 +70,7 @@ app.use("/api/v1/gpt", gptRoutes);
 app.use("/api/v1/locations", locationRoutes);
 app.use("/api/v1/equipments", equipmentRoutes);
 app.use("/api/v1/deviationCategories", deviationCategoryRoutes);
+app.use("/api/v1/questions", questionRoutes);
 
 app.listen(PORT, () => {
   connectDB();
