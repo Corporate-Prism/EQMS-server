@@ -21,11 +21,7 @@ const router = express.Router();
  *                 type: string
  *                 required: true
  *                 example: Weight machine
- *               equipmentCode:
- *                 type: string
- *                 required: true
- *                 example: WM
- *               departmentId:
+ *               department:
  *                 type: string
  *                 required: true
  *     responses:
@@ -70,7 +66,7 @@ router.post("/newEquipment", addNewEquipment);
  *                         type: string
  *                       equipmentCode:
  *                         type: string
- *                       departmentId:
+ *                       department:
  *                         type: string
  *       500:
  *         description: Internal server error

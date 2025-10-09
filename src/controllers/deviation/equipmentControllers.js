@@ -2,15 +2,11 @@ import Equipment from "../../models/deviation/Equipment.js";
 
 export const addNewEquipment = async (req, res) => {
     try {
-        const { equipmentName, equipmentCode, departmentId } = req.body;
-        if (!equipmentName || !equipmentCode || !departmentId) return res.status(400).json({ message: "All fields are required" });
-        const existing = await Equipment.findOne({ equipmentCode });
-        if (existing) return res.status(400).json({ message: "Equipment code already exists." });
-
+        const { equipmentName, department } = req.body;
+        if (!equipmentName || !department) return res.status(400).json({ message: "All fields are required" });
         const equipment = await Equipment.create({
             equipmentName,
-            equipmentCode,
-            departmentId,
+            department,
         });
         return res
             .status(201)
@@ -35,7 +31,7 @@ export const getAllEquipments = async (req, res) => {
                 { equipmentCode: { $regex: search, $options: "i" } }
             ];
         }
-        const equipments = await Equipment.find(query).populate("departmentId").sort({ createdAt: -1 });
+        const equipments = await Equipment.find(query).populate("department").sort({ createdAt: -1 });
         return res.status(200).json({ equipments });
     } catch (error) {
         return res
@@ -47,7 +43,7 @@ export const getAllEquipments = async (req, res) => {
 export const getEquipmentById = async (req, res) => {
     try {
         const { id } = req.params;
-        const equipment = await Equipment.findById(id).populate("departmentId");
+        const equipment = await Equipment.findById(id).populate("department");
         if (!equipment) return res.status(404).json({ message: "Equipment not found" });
         return res.status(200).json({ equipment });
     } catch (error) {

@@ -21,11 +21,7 @@ const router = express.Router();
  *                 type: string
  *                 required: true
  *                 example: Production floor
- *               locationCode:
- *                 type: string
- *                 required: true
- *                 example: PF
- *               departmentId:
+ *               department:
  *                 type: string
  *                 required: true
  *     responses:
@@ -70,7 +66,7 @@ router.post("/newLocation", addNewLocation);
  *                         type: string
  *                       locationCode:
  *                         type: string
- *                       departmentId:
+ *                       department:
  *                         type: string
  *       500:
  *         description: Internal server error
