@@ -16,13 +16,13 @@ const EquipmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
       required: true,
-    }
+    },
   },
   { timestamps: true }
 );
 
 EquipmentSchema.pre("save", async function (next) {
-  if (this.locationCode) return next();
+  if (this.equipmentCode) return next();
 
   try {
     const department = await Department.findById(this.department);
@@ -37,9 +37,9 @@ EquipmentSchema.pre("save", async function (next) {
       prefix = `${prefix}${randomNum}`;
     }
     const count = await mongoose
-      .model("Location")
+      .model("Equipment")
       .countDocuments({ department: this.department });
-    this.locationCode = `${prefix}-EQU${String(count + 1).padStart(3, "0")}`;
+    this.equipmentCode = `${prefix}-EQU${String(count + 1).padStart(3, "0")}`;
     next();
   } catch (err) {
     next(err);
