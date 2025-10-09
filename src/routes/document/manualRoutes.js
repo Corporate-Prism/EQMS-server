@@ -359,7 +359,7 @@ router.post("/approve", approveManualVersion);
  * /api/v1/manuals/version/{versionId}:
  *   put:
  *     summary: Edit a policy version
- *     tags: [Policies]
+ *     tags: [Manuals]
  *     parameters:
  *       - in: path
  *         name: versionId
