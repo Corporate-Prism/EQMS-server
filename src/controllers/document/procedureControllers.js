@@ -251,10 +251,13 @@ export const approveProcedureVersion = async (req, res) => {
 
     version.status = "approved";
     version.approvedBy = approvedBy;
-    lastVersion.status = "archived";
+
+    if (lastVersion) {
+      lastVersion.status = "archived";
+      await lastVersion.save();
+    }
 
     await version.save();
-    await lastVersion.save();
 
     return res.status(200).json({
       success: true,
