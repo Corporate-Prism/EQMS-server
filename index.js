@@ -19,6 +19,7 @@ import locationRoutes from "./src/routes/deviation/locationRoutes.js";
 import equipmentRoutes from "./src/routes/deviation/equipmentRoutes.js";
 import deviationCategoryRoutes from "./src/routes/deviation/deviationCategoryRoutes.js";
 import questionRoutes from "./src/routes/questionRoutes.js";
+import attachmentRoutes from "./src/routes/deviation/attachmentRoutes.js";
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ["./src/routes/**/*.js"]
+  apis: ["./src/routes/**/*.js"],
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
@@ -71,6 +72,7 @@ app.use("/api/v1/locations", locationRoutes);
 app.use("/api/v1/equipments", equipmentRoutes);
 app.use("/api/v1/deviationCategories", deviationCategoryRoutes);
 app.use("/api/v1/questions", questionRoutes);
+app.use("/api/v1/attachments", attachmentRoutes);
 
 app.listen(PORT, () => {
   connectDB();
