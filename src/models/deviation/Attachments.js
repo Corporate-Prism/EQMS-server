@@ -4,7 +4,6 @@ export const attachmentSchema = new mongoose.Schema({
   deviationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Deviation",
-    // required: true,
   },
   attachmentUrl: {
     type: String,

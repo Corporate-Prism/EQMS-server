@@ -1,4 +1,5 @@
-import { uploadToCloudinary } from "../../../utils/uploadToCloudinary.js";
+
+import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import Attachments from "../../models/deviation/Attachments.js";
 import fs from "fs";
 
@@ -13,8 +14,8 @@ export const uploadAttachment = async (req, res) => {
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: "Attachment file is required" });
     }
-
-    const result = await uploadToCloudinary(
+    
+    const result = await uploadFilesToCloudinary(
       req.file.path,
       "deviation_attachments"
     );

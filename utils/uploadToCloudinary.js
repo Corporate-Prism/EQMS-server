@@ -1,20 +1,14 @@
 import cloudinary from "./cloudinary.js";
 import fs from "fs";
 
-export const uploadToCloudinary = async (filePath, folder = "uploads") => {
-  try {
-    if (!filePath) throw new Error("No file path provided");
-
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder,
-      resource_type: "auto",
+export const uploadFilesToCloudinary = async (files, folder = "eqms") => {
+  const urls = [];
+  for (const file of files) {
+    const uploadResult = await cloudinary.uploader.upload(file.path, {
+      folder, resourceType: "auto"
     });
-
-    fs.unlinkSync(filePath);
-
-    return { url: result.secure_url, public_id: result.public_id };
-  } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    throw new Error("Failed to upload file to Cloudinary");
+    urls.push(uploadResult.secure_url);
+    fs.unlinkSync(file.path);
   }
-};
+  return urls;
+}
