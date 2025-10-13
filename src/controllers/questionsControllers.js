@@ -3,7 +3,7 @@ import Question from "../models/Question.js";
 
 export const addNewQuestion = async (req, res) => {
     try {
-        const { questionText,  } = req.body;
+        const { questionText,  responseType} = req.body;
         if (!questionText || !responseType) return res.status(400).json({ message: "All fields are required" });
         const question = await Question.create({
             questionText,
