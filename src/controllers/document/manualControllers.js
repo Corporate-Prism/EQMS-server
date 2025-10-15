@@ -143,6 +143,7 @@ export const getManualVersionsByManualId = async (req, res) => {
     // const manual = await Manual.findById(req.params.id).populate("versions");
     const manual = await Manual.findById(req.params.id).populate({
       path: "versions",
+      options: { sort: { createdAt: -1 } },
       populate: [
         { path: "preparedBy", select: "name email" },
         { path: "approvedBy", select: "name email" },

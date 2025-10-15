@@ -151,6 +151,7 @@ export const getWIVersionsByWIId = async (req, res) => {
 
     const WI = await WorkInstruction.findById(id).populate({
       path: "versions",
+      options: { sort: { createdAt: -1 } },
       populate: [
         { path: "preparedBy", select: "name email" },
         { path: "approvedBy", select: "name email" },

@@ -150,6 +150,7 @@ export const getProcedureVersionsByProcedureId = async (req, res) => {
     // const procedure = await Procedure.findById(id).populate("versions");
     const procedure = await Procedure.findById(req.params.id).populate({
       path: "versions",
+      options: { sort: { createdAt: -1 } },
       populate: [
         { path: "preparedBy", select: "name email" },
         { path: "approvedBy", select: "name email" },
