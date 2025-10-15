@@ -146,6 +146,7 @@ export const getPolicyVersionsByPolicyId = async (req, res) => {
     // const policy = await Policy.findById(id).populate("versions");
     const policy = await Policy.findById(req.params.id).populate({
       path: "versions",
+      options: { sort: { createdAt: -1 } },
       populate: [
         { path: "preparedBy", select: "name email" },
         { path: "approvedBy", select: "name email" },
