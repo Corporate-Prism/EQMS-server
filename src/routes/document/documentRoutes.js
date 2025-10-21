@@ -33,8 +33,6 @@ const router = express.Router();
  *           type: string
  *           example: 66f89f1234567890abcd0001
  *
- *     security:
- *       - bearerAuth: []
  *
  *     responses:
  *       200:
