@@ -10,6 +10,7 @@ import {
   getManualsByDepartmentId,
   editManualVersion
 } from "../../controllers/document/manualControllers.js";
+import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -150,14 +151,33 @@ router.post("/version", addManualVersion);
  * /api/v1/manuals:
  *   get:
  *     summary: Get all manuals with their versions
+ *     description: Retrieve all manuals and their associated versions. Requires authentication and specific roles.
  *     tags: [Manuals]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, under_review, under_approval, approved, archived]
+ *         description: Optional filter to retrieve manuals having versions with a specific status.
  *     responses:
  *       200:
- *         description: List of manuals
+ *         description: List of manuals retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
  *       500:
  *         description: Server error
  */
-router.get("/", getManuals);
+router.get(
+  "/",
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
+  getManuals
+);
+
 
 /**
  * @swagger

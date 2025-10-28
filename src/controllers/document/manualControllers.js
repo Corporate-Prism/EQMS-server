@@ -117,12 +117,60 @@ export const addManualVersion = async (req, res) => {
   }
 };
 
+// export const getManuals = async (req, res) => {
+//   try {
+//     const manuals = await Manual.find().populate("versions");
+//     return res.status(200).json({ success: true, data: manuals });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 export const getManuals = async (req, res) => {
   try {
-    const manuals = await Manual.find().populate("versions");
-    return res.status(200).json({ success: true, data: manuals });
+    const { status } = req.query;
+
+    let query = Manual.find();
+
+    if (status) {
+      query = query.populate({
+        path: "versions",
+        match: { status },
+        populate: [
+          { path: "preparedBy", select: "name email" },
+          { path: "approvedBy", select: "name email" },
+        ],
+      });
+    } else {
+      query = query.populate({
+        path: "versions",
+        populate: [
+          { path: "preparedBy", select: "name email" },
+          { path: "approvedBy", select: "name email" },
+        ],
+      });
+    }
+
+    const manuals = await query.populate("department").sort({ createdAt: -1 });
+
+    // 🔹 Filter out manuals that have no matching versions when status is specified
+    const filteredManuals = status
+      ? manuals.filter((manual) => manual.versions.length > 0)
+      : manuals;
+
+    return res.status(200).json({
+      success: true,
+      message: status
+        ? `Manuals filtered by version status: ${status}`
+        : "All manuals fetched successfully",
+      count: filteredManuals.length,
+      data: filteredManuals,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

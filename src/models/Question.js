@@ -12,6 +12,10 @@ const QuestionSchema = new mongoose.Schema(
             enum: ["yes_no", "rating"],
             required: true,
         },
+        tag: {
+            type: String,
+            required: true
+        }
     },
     { timestamps: true }
 );

@@ -24,7 +24,8 @@ export const addNewEquipment = async (req, res) => {
 export const getAllEquipments = async (req, res) => {
     try {
         const { search } = req.query;
-        const query = {};
+        const baseFilter = req.departmentFilter || {};
+        const query = {...baseFilter};
         if (search) {
             query.$or = [
                 { equipmentName: { $regex: search, $options: "i" } },

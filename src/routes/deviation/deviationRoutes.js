@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviations } from "../../controllers/deviation/deviationControllers.js";
+import { authMiddleware, authorizeRoles } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.post(
   ]),
   createDeviation
 );
+router.get("/", authMiddleware, authorizeRoles("System Admin"), getDeviations)
 
 export default router;

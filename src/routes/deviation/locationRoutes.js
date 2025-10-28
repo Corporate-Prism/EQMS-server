@@ -1,5 +1,6 @@
 import express from "express";
 import { addNewLocation, deleteLocation, getAllLocations, getLocationById, updateLocation } from "../../controllers/deviation/locationControllers.js";
+import { authAndAuthorize, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -41,6 +42,8 @@ router.post("/newLocation", addNewLocation);
  *     summary: Retrieve all locations
  *     tags: [Locations]
  *     description: Fetch a list of all locations with optional search filtering by name or code.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: search
@@ -71,7 +74,8 @@ router.post("/newLocation", addNewLocation);
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllLocations);
+// router.get("/", getAllLocations);
+router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getAllLocations)
 
 /**
  * @swagger

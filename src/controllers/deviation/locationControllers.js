@@ -2,7 +2,7 @@ import Location from "../../models/deviation/Location.js";
 
 export const addNewLocation = async (req, res) => {
     try {
-        const { locationName,  department} = req.body;
+        const { locationName, department } = req.body;
         if (!locationName || !department) return res.status(400).json({ message: "All fields are required" });
         const location = await Location.create({
             locationName,
@@ -24,7 +24,9 @@ export const addNewLocation = async (req, res) => {
 export const getAllLocations = async (req, res) => {
     try {
         const { search } = req.query;
-        const query = {};
+        const baseFilter = req.departmentFilter || {};
+        const query = { ...baseFilter };
+        // const query = {};
         if (search) {
             query.$or = [
                 { locationName: { $regex: search, $options: "i" } },
