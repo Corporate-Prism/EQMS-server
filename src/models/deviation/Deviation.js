@@ -13,6 +13,25 @@ const DeviationSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
+        status: {
+            type: String,
+            enum: [
+                "Draft",
+                "Under Department Head Review",
+                // "Submitted",
+                // "Returned for Revision",
+                // "Under Department Head Review",
+                // "Under QA Review",
+                // "Under Investigation",
+                // "Under Impact Assessment",
+                // "Under CAPA",
+                // "Under QA Verification",
+                // "Closed",
+                // "Rejected",
+            ],
+            default: "Draft",
+        },
+
         deviationType: {
             type1: {
                 type: String,

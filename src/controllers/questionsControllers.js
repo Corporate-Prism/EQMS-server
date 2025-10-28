@@ -3,11 +3,12 @@ import Question from "../models/Question.js";
 
 export const addNewQuestion = async (req, res) => {
     try {
-        const { questionText,  responseType} = req.body;
-        if (!questionText || !responseType) return res.status(400).json({ message: "All fields are required" });
+        const { questionText, responseType, tag } = req.body;
+        if (!questionText || !responseType || !tag) return res.status(400).json({ message: "All fields are required" });
         const question = await Question.create({
             questionText,
             responseType,
+            tag
         });
         return res
             .status(201)
@@ -24,13 +25,14 @@ export const addNewQuestion = async (req, res) => {
 
 export const getAllQuestions = async (req, res) => {
     try {
-        const { search } = req.query;
+        const { search, tag } = req.query;
         const query = {};
         if (search) {
             query.$or = [
                 { questionText: { $regex: search, $options: "i" } },
             ];
         }
+        if (tag) query.tag = tag;
         const questions = await Question.find(query).sort({ createdAt: -1 });
         return res.status(200).json({ questions });
     } catch (error) {

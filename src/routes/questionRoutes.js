@@ -25,6 +25,9 @@ const router = express.Router();
  *                 type: string
  *                 required: true
  *                 example: (yes or no / rating)
+ *               tag:
+ *                 type: string
+ *                 required: true
  *     responses:
  *       201:
  *         description: Question created successfully
@@ -48,6 +51,10 @@ router.post("/newQuestion", addNewQuestion);
  *         schema:
  *           type: string
  *         description: Search term to filter questions by name.
+ *       - in: query
+ *         name: tag
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Questions retrieved successfully

@@ -1,5 +1,6 @@
 import express from "express";
 import { addNewEquipment, deleteEquipment, getAllEquipments, getEquipmentById, updateEquipment } from "../../controllers/deviation/equipmentControllers.js";
+import { authAndAuthorize, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -41,6 +42,8 @@ router.post("/newEquipment", addNewEquipment);
  *     summary: Retrieve all equipments
  *     tags: [Equipments]
  *     description: Fetch a list of all equipments with optional search filtering by name or code.
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: search
@@ -71,7 +74,7 @@ router.post("/newEquipment", addNewEquipment);
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllEquipments);
+router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getAllEquipments);
 
 /**
  * @swagger

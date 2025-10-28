@@ -35,19 +35,19 @@ export const createDeviation = async (req, res) => {
             type: body.itemType,
             ...(body.itemType === "product"
               ? {
-                  product: {
-                    productName: body.productName,
-                    productCode: body.productCode,
-                    productBatchNumber: body.productBatchNumber,
-                  },
-                }
+                product: {
+                  productName: body.productName,
+                  productCode: body.productCode,
+                  productBatchNumber: body.productBatchNumber,
+                },
+              }
               : {
-                  material: {
-                    materialName: body.materialName,
-                    materialCode: body.materialCode,
-                    materialBatchNumber: body.materialBatchNumber,
-                  },
-                }),
+                material: {
+                  materialName: body.materialName,
+                  materialCode: body.materialCode,
+                  materialBatchNumber: body.materialBatchNumber,
+                },
+              }),
           },
           equipment: body.equipment,
           document: {
@@ -137,3 +137,18 @@ export const createDeviation = async (req, res) => {
     });
   }
 };
+
+export const getDeviations = async (req, res) => {
+  try {
+    const deviations = await Deviation.find();
+    res.status(200).json({
+      success: true,
+      deviations
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
