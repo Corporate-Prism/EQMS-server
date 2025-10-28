@@ -25,6 +25,32 @@ router.post(
   ]),
   createDeviation
 );
+
+/**
+ * @swagger
+ * tags:
+ *   name: Deviations
+ *   description: API endpoints for managing deviations
+ */
+
+/**
+ * @swagger
+ * /api/v1/deviations/:
+ *   get:
+ *     summary: get all deviations
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: 
+ *         description: List of deviations retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       500:
+ *         description: Server error
+ */
 router.get("/", authMiddleware, authorizeRoles("System Admin"), getDeviations)
 
 export default router;
