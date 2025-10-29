@@ -157,6 +157,11 @@ const DeviationSchema = new mongoose.Schema(
             enum: ["Minor", "Major", "Critical"],
             required: true,
         },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Auth",
+            required: true
+        }
     },
     { timestamps: true }
 );

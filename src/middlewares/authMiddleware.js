@@ -19,7 +19,6 @@ export const authMiddleware = async (req, res, next) => {
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     try {
-      const user = req.user;
       console.log("this is user", user)
       if (!user || !user.role || !user.role.roleName) {
         return res.status(403).json({ message: "User role not found" });
@@ -68,7 +67,6 @@ export const authAndAuthorize = (...allowedRoles) => {
 
 export const departmentAccessMiddleware = (req, res, next) => {
   try {
-    console.log('this is req', req.user)
     const role = req.user.role.roleName;
     const departmentName = req.user.department.departmentName;
     const departmentId = req.user.department?._id;
