@@ -65,6 +65,7 @@ export const createDeviation = async (req, res) => {
           immediateImpactAssessment: body.immediateImpactAssessment,
           riskAssessment: body.riskAssessment,
           securityLevel: body.securityLevel,
+          createdBy: req.user._id
         },
       ],
       { session }
@@ -141,13 +142,14 @@ export const createDeviation = async (req, res) => {
 export const getDeviations = async (req, res) => {
   try {
     const deviations = await Deviation.find()
-    .populate("department", "departmentName")
-    .populate("location", "locationName locationCode")
-    .populate("equipment", "equipmentName equipmentCode")
-    .populate("deviationType.type3", "categoryName")
-    .populate("document.documentId", "manualName policyName procedureName workInstructionName")
-    .populate("detailedDescription.attachments", "deviationId attachmentUrl")
-    .populate("relatedRecords.attachments", "deviationId attachmentUrl")
+      .populate("department", "departmentName")
+      .populate("location", "locationName locationCode")
+      .populate("equipment", "equipmentName equipmentCode")
+      .populate("deviationType.type3", "categoryName")
+      .populate("document.documentId", "manualName policyName procedureName workInstructionName")
+      .populate("detailedDescription.attachments", "deviationId attachmentUrl")
+      .populate("relatedRecords.attachments", "deviationId attachmentUrl")
+      .populate("createdBy", "name");
     res.status(200).json({
       success: true,
       deviations
@@ -159,3 +161,36 @@ export const getDeviations = async (req, res) => {
     });
   }
 }
+
+export const getDeviationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deviation = await Deviation.findById(id)
+      .populate("department", "departmentName")
+      .populate("location", "locationName locationCode")
+      .populate("equipment", "equipmentName equipmentCode")
+      .populate("deviationType.type3", "categoryName")
+      .populate("document.documentId", "manualName policyName procedureName workInstructionName")
+      .populate("detailedDescription.attachments", "deviationId attachmentUrl")
+      .populate("relatedRecords.attachments", "deviationId attachmentUrl")
+      .populate("createdBy", "name");
+
+    if (!deviation) {
+      return res.status(404).json({
+        success: false,
+        message: "Deviation not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      deviation,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
