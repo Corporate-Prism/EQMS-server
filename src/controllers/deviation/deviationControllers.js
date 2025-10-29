@@ -149,7 +149,14 @@ export const getDeviations = async (req, res) => {
       .populate("document.documentId", "manualName policyName procedureName workInstructionName")
       .populate("detailedDescription.attachments", "deviationId attachmentUrl")
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
-      .populate("createdBy", "name");
+      .populate("createdBy", "name")
+      .populate({
+        path: "impactAssessment",
+        populate: {
+          path: "answers.questionId",
+          select: "questionText responseType",
+        },
+      });
     res.status(200).json({
       success: true,
       deviations
@@ -174,7 +181,14 @@ export const getDeviationById = async (req, res) => {
       .populate("document.documentId", "manualName policyName procedureName workInstructionName")
       .populate("detailedDescription.attachments", "deviationId attachmentUrl")
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
-      .populate("createdBy", "name");
+      .populate("createdBy", "name")
+      .populate({
+        path: "impactAssessment",
+        populate: {
+          path: "answers.questionId",
+          select: "questionText responseType",
+        },
+      });
 
     if (!deviation) {
       return res.status(404).json({
