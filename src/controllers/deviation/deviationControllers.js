@@ -140,7 +140,14 @@ export const createDeviation = async (req, res) => {
 
 export const getDeviations = async (req, res) => {
   try {
-    const deviations = await Deviation.find();
+    const deviations = await Deviation.find()
+    .populate("department", "departmentName")
+    .populate("location", "locationName locationCode")
+    .populate("equipment", "equipmentName equipmentCode")
+    .populate("deviationType.type3", "categoryName")
+    .populate("document.documentId", "manualName policyName procedureName workInstructionName")
+    .populate("detailedDescription.attachments", "deviationId attachmentUrl")
+    .populate("relatedRecords.attachments", "deviationId attachmentUrl")
     res.status(200).json({
       success: true,
       deviations

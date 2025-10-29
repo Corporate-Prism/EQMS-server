@@ -84,6 +84,7 @@ const DeviationSchema = new mongoose.Schema(
         document: {
             documentId: {
                 type: mongoose.Schema.Types.ObjectId,
+                refPath: "document.documentModel",
                 required: false,
             },
             documentModel: {
@@ -122,7 +123,7 @@ const DeviationSchema = new mongoose.Schema(
             attachments: [
                 {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Attachment",
+                    ref: "Attachments",
                 },
             ],
         },
@@ -138,7 +139,7 @@ const DeviationSchema = new mongoose.Schema(
             attachments: [
                 {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Attachment",
+                    ref: "Attachments",
                 },
             ],
         },
