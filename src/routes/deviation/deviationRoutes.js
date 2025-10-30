@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize, authMiddleware, authorizeRoles, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -53,6 +53,26 @@ router.post(
  *         description: Server error
  */
 router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getDeviations)
+
+/**
+ * @swagger
+ * /api/v1/deviations/summary:
+ *   get:
+ *     summary: get all deviations
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: 
+ *         description: List of deviations retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       500:
+ *         description: Server error
+ */
+router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getDeviationsSummary)
 
 /**
  * @swagger
@@ -133,6 +153,5 @@ router.get(
   departmentAccessMiddleware,
   getDeviationById
 );
-
 
 export default router;
