@@ -169,6 +169,22 @@ export const getDeviations = async (req, res) => {
   }
 }
 
+export const getDeviationsSummary = async (req, res) => {
+  try {
+    const deviations = await Deviation.find()
+      .select("summary deviationNumber")
+    res.status(200).json({
+      success: true,
+      deviations
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
 export const getDeviationById = async (req, res) => {
   try {
     const { id } = req.params;
