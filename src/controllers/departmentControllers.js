@@ -29,7 +29,13 @@ export const addNewDepartment = async (req, res) => {
 
 export const getAllDepartments = async (req, res) => {
   try {
-    const departments = await Department.find();
+    const baseFilter = req.departmentFilter || {};
+    let query = { ...baseFilter };
+    if (query.department) {
+      query = { _id: query.department };
+      delete query.department;
+    }
+    const departments = await Department.find(query);
     return res.status(200).json({ departments });
   } catch (error) {
     return res
