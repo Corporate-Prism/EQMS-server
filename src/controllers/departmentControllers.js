@@ -35,12 +35,10 @@ export const getAllDepartments = async (req, res) => {
       query = { _id: query.department };
       delete query.department;
     }
-    const departments = await Department.find(query);
-    return res.status(200).json({ departments });
+    const departments = await Department.find(query).lean();
+    return res.status(200).json({ success: true, departments });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: error.message || "Internal server error" });
+    return res.status(500).json({ message: error.message || "Internal server error" });
   }
 };
 

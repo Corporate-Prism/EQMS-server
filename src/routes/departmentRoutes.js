@@ -6,7 +6,7 @@ import {
   getDepartmentById,
   updateDepartment,
 } from "../controllers/departmentControllers.js";
-import { authAndAuthorize, departmentAccessMiddleware } from "../middlewares/authMiddleware.js";
+import { departmentAccessMiddleware, optionalAuthMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -53,14 +53,14 @@ router.post("/newDepartment", addNewDepartment);
  *     tags: [Departments]
  *     description: Retrieve a list of all departments
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: [] 
  *     responses:
  *       200:
  *         description: Departments retrieved successfully
  *       500:
  *         description: Internal server error
  */
-router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getAllDepartments);
+router.get("/", optionalAuthMiddleware, departmentAccessMiddleware, getAllDepartments);
 
 /**
  * @swagger
