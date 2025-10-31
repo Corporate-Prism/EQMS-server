@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import { verifyTokenAndFetchUser } from "../../utils/jwtUtils.js";
+import jwt from "jsonwebtoken";
+import Auth from "../models/Auth.js";
 
 
 export const authMiddleware = async (req, res, next) => {
@@ -67,18 +69,42 @@ export const authAndAuthorize = (...allowedRoles) => {
 
 export const departmentAccessMiddleware = (req, res, next) => {
   try {
-    const role = req.user.role.roleName;
-    const departmentName = req.user.department.departmentName;
-    const departmentId = req.user.department?._id;
     req.departmentFilter = {};
-
-    if (role === "Creator" && departmentName !== "QA") {
-      req.departmentFilter = {
-        department: new mongoose.Types.ObjectId(departmentId),
-      };
+    if (!req.user) return next();
+    const role = req.user.role?.roleName;
+    const departmentName = req.user.department?.departmentName;
+    const departmentId = req.user.department?._id;
+    if (role === "Creator" && departmentName && departmentName !== "QA" && departmentId) {
+      req.departmentFilter = { department: new mongoose.Types.ObjectId(departmentId) };
+    } else {
+      req.departmentFilter = {};
     }
     next();
   } catch (error) {
     return res.status(500).json({ message: "Department access middleware error", error: error.message });
+  }
+};
+
+export const optionalAuthMiddleware = async (req, res, next) => {
+  try {
+    req.user = undefined;
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!authHeader) return next();
+    if (!authHeader.startsWith("Bearer ")) return next();
+    const token = authHeader.split(" ")[1];
+    if (!token) return next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.id || decoded._id || decoded.i || decoded.sub;
+      if (!userId) return next();
+      const user = await Auth.findById(userId).populate("role").populate("department");
+      if (!user) return next();
+      req.user = user;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  } catch (err) {
+    return next();
   }
 };
