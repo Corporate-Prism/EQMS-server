@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary } from "../../controllers/deviation/deviationControllers.js";
-import { authAndAuthorize, authMiddleware, authorizeRoles, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
+import { authAndAuthorize, authMiddleware, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -153,5 +153,165 @@ router.get(
   departmentAccessMiddleware,
   getDeviationById
 );
+
+/**
+ * @swagger
+ * /api/v1/deviations/{id}/review:
+ *   patch:
+ *     summary: Review a deviation (Department Head review)
+ *     description: Allows a reviewer (Department Head) from the same department as the deviation creator to review, approve, or return a deviation for revision.
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Deviation ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [approve, return]
+ *                 description: Action to take on the deviation.
+ *                 example: approve
+ *               reviewComments:
+ *                 type: string
+ *                 description: Optional comments by the reviewer.
+ *                 example: Deviation verified and approved for QA review.
+ *     responses:
+ *       200:
+ *         description: Deviation reviewed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Deviation approved successfully.
+ *                 deviation:
+ *                   $ref: '#/components/schemas/Deviation'
+ *       400:
+ *         description: Invalid input or unauthorized action.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Only reviewers from the same department can review this deviation.
+ *       401:
+ *         description: Unauthorized - Missing or invalid token.
+ *       404:
+ *         description: Deviation not found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.patch("/:id/review", authMiddleware, reviewDeviation);
+
+/**
+ * @swagger
+ * /api/v1/deviations/{id}/submit:
+ *   put:
+ *     summary: Submit a deviation for review
+ *     tags: [Deviations]
+ *     description: Change the deviation status from Draft to Submitted and record who submitted it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Deviation ID to submit for review
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments:
+ *                 type: string
+ *                 description: Optional comments added during submission
+ *     responses:
+ *       200:
+ *         description: Deviation submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Deviation submitted for review successfully
+ *                 deviation:
+ *                   type: object
+ *                   description: Updated deviation details
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1221
+ *                     title:
+ *                       type: string
+ *                       example: Temperature deviation in Room 104
+ *                     status:
+ *                       type: string
+ *                       example: Submitted
+ *                     submittedBy:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1229
+ *                     submittedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-10-31T12:45:23.000Z
+ *       400:
+ *         description: Invalid operation or deviation not in Draft state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Only Draft deviations can be submitted for review
+ *       404:
+ *         description: Deviation not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Deviation not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error submitting deviation
+ */
+router.put("/:id/submit", authAndAuthorize("Creator"), submitDeviationForReview);
 
 export default router;
