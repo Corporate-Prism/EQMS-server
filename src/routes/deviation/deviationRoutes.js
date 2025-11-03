@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -302,5 +302,61 @@ router.put("/:id/submit", authAndAuthorize("Creator"), submitDeviationForReview)
  */
 
 router.put("/:id/review", authAndAuthorize("Reviewer"), reviewDeviation);
+
+/**
+ * @swagger
+ * /api/v1/deviations/{id}/qa-review:
+ *   put:
+ *     summary: QA review deviation (accept or reject)
+ *     tags: [Deviations]
+ *     description: QA Approver reviews a deviation after Department Head approval.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Deviation ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               qaComments:
+ *                 type: string
+ *                 example: "QA has reviewed and accepted the deviation."
+ *     responses:
+ *       200:
+ *         description: Deviation reviewed by QA successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 deviation:
+ *                   type: object
+ *       400:
+ *         description: Invalid status or action
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: Deviation not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewDeviation);
+
 
 export default router;

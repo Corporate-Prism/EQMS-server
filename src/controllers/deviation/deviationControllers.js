@@ -153,6 +153,7 @@ export const getDeviations = async (req, res) => {
       .populate("createdBy", "name")
       .populate("submittedBy", "name")
       .populate("reviewedBy", "name")
+      .populate("qaReviewer", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -203,6 +204,7 @@ export const getDeviationById = async (req, res) => {
       .populate("createdBy", "name")
       .populate("submittedBy", "name")
       .populate("reviewedBy", "name")
+      .populate("qaReviewer", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -296,7 +298,7 @@ export const reviewDeviation = async (req, res) => {
       });
     }
     let newStatus;
-    if (action === "Approved") newStatus = "Approved by Department Head";
+    if (action === "Approved") newStatus = "Approved By Department Head";
     else if (action === "Rejected") newStatus = "Draft";
     else
       return res.status(400).send({
@@ -316,6 +318,50 @@ export const reviewDeviation = async (req, res) => {
     console.error("Error reviewing deviation:", error);
     return res.status(500).send({
       message: "Error reviewing deviation",
+      error: error.message,
+    });
+  }
+};
+
+export const qaReviewDeviation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, qaComments } = req.body;
+    const deviation = await Deviation.findById(id);
+    if (!deviation) return res.status(404).json({ message: "Deviation not found" });
+    if (deviation.status !== "Approved By Department Head") {
+      return res.status(400).json({
+        message: "Only deviations approved by Department Head can be reviewed by QA",
+      });
+    }
+    if (!["Approved", "Rejected"].includes(action)) {
+      return res.status(400).json({
+        message: "Invalid action. Must be 'Accepted' or 'Rejected'",
+      });
+    }
+    if (action === "Approved") {
+      deviation.status = "Accepted By QA";
+      deviation.qaReviewer = req.user._id;
+      deviation.qaReviewedAt = new Date();
+      deviation.qaComments = qaComments || null;
+    } else if (action === "Rejected") {
+      deviation.status = "Draft";
+      deviation.qaReviewer = req.user._id;
+      deviation.qaReviewedAt = new Date();
+      deviation.qaComments = qaComments || "Rejected by QA";
+    }
+    await deviation.save();
+    res.status(200).json({
+      success: true,
+      message:
+        action === "Accepted"
+          ? "Deviation accepted by QA successfully."
+          : "Deviation rejected by QA.",
+      deviation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error reviewing deviation by QA",
       error: error.message,
     });
   }
