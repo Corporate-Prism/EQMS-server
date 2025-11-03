@@ -152,6 +152,7 @@ export const getDeviations = async (req, res) => {
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
       .populate("createdBy", "name")
       .populate("submittedBy", "name")
+      .populate("reviewedBy", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -201,6 +202,7 @@ export const getDeviationById = async (req, res) => {
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
       .populate("createdBy", "name")
       .populate("submittedBy", "name")
+      .populate("reviewedBy", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -266,39 +268,55 @@ export const submitDeviationForReview = async (req, res) => {
 export const reviewDeviation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, comments } = req.body;
+    const { action, reviewComments } = req.body;
     const userId = req.user._id;
     const deviation = await Deviation.findById(id).populate("department createdBy");
     if (!deviation) return res.status(404).send({ message: "Deviation not found" });
-    const reviewer = await Auth.findById(userId).populate("role", "roleName");
-    console.log("this is reviewer", reviewer)
+    const reviewer = await Auth.findById(userId)
+      .populate("role", "roleName")
+      .populate("department", "departmentName");
     if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
-    if (String(reviewer.department._id) !== String(deviation.department._id)) {
-      return res.status(403).send({ message: "You can only review deviations from your own department" });
+    if (
+      reviewer.department.departmentName !== "QA" &&
+      String(reviewer.department._id) !== String(deviation.department._id)
+    ) {
+      return res.status(403).send({
+        message:
+          "You can only review deviations from your own department (QA can review all).",
+      });
     }
     if (reviewer.role.roleName !== "Reviewer") {
-      return res.status(403).send({ message: "Only users with Reviewer role can review this deviation" });
+      return res.status(403).send({
+        message: "Only users with Reviewer role can review this deviation.",
+      });
     }
     if (deviation.status !== "Under Department Head Review") {
-      return res.status(400).send({ message: "This deviation is not under review" });
+      return res.status(400).send({
+        message: "Only deviations under department head review can be reviewed.",
+      });
     }
     let newStatus;
     if (action === "Approved") newStatus = "Approved by Department Head";
-    else if (action === "Returned") newStatus = "Revision Required";
-    else return res.status(400).send({ message: "Invalid action" });
+    else if (action === "Rejected") newStatus = "Draft";
+    else
+      return res.status(400).send({
+        message: "Invalid action — use 'Approved' or 'Rejected'.",
+      });
     deviation.status = newStatus;
-    deviation.review_history.push({
-      reviewer: userId,
-      role: reviewer.role,
-      action,
-      comments,
-    });
+    deviation.reviewedBy = reviewer._id;
+    deviation.reviewedAt = new Date();
+    deviation.reviewComments = reviewComments;
     await deviation.save();
     return res.status(200).send({
-      message: `Deviation ${action.toLowerCase()} successfully`,
+      message: `Deviation ${action.toLowerCase()} successfully.`,
+      success: true,
+      deviation,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Error reviewing deviation", error: error.message });
+    console.error("Error reviewing deviation:", error);
+    return res.status(500).send({
+      message: "Error reviewing deviation",
+      error: error.message,
+    });
   }
 };

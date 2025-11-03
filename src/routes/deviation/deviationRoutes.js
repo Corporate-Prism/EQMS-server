@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
-import { authAndAuthorize, authMiddleware, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
+import { authAndAuthorize, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -156,76 +156,6 @@ router.get(
 
 /**
  * @swagger
- * /api/v1/deviations/{id}/review:
- *   patch:
- *     summary: Review a deviation (Department Head review)
- *     description: Allows a reviewer (Department Head) from the same department as the deviation creator to review, approve, or return a deviation for revision.
- *     tags: [Deviations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: Deviation ID
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               action:
- *                 type: string
- *                 enum: [approve, return]
- *                 description: Action to take on the deviation.
- *                 example: approve
- *               reviewComments:
- *                 type: string
- *                 description: Optional comments by the reviewer.
- *                 example: Deviation verified and approved for QA review.
- *     responses:
- *       200:
- *         description: Deviation reviewed successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Deviation approved successfully.
- *                 deviation:
- *                   $ref: '#/components/schemas/Deviation'
- *       400:
- *         description: Invalid input or unauthorized action.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Only reviewers from the same department can review this deviation.
- *       401:
- *         description: Unauthorized - Missing or invalid token.
- *       404:
- *         description: Deviation not found.
- *       500:
- *         description: Internal server error.
- */
-router.patch("/:id/review", authMiddleware, reviewDeviation);
-
-/**
- * @swagger
  * /api/v1/deviations/{id}/submit:
  *   put:
  *     summary: Submit a deviation for review
@@ -313,5 +243,64 @@ router.patch("/:id/review", authMiddleware, reviewDeviation);
  *                   example: Error submitting deviation
  */
 router.put("/:id/submit", authAndAuthorize("Creator"), submitDeviationForReview);
+
+/**
+ * @swagger
+ * /api/v1/deviations/{id}/review:
+ *   put:
+ *     summary: Review a deviation (approve or reject)
+ *     description: Allows a department head or QA reviewer to approve or reject a deviation under review.
+ *     tags:
+ *       - Deviations
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Deviation ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               reviewComments:
+ *                 type: string
+ *                 example: "Deviation reviewed and approved."
+ *     responses:
+ *       200:
+ *         description: Deviation reviewed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Deviation approved successfully.
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 deviation:
+ *                   type: object
+ *       400:
+ *         description: Invalid request (wrong status or invalid action).
+ *       403:
+ *         description: Unauthorized — user cannot review this deviation.
+ *       404:
+ *         description: Deviation or reviewer not found.
+ *       500:
+ *         description: Server error.
+ */
+
+router.put("/:id/review", authAndAuthorize("Reviewer"), reviewDeviation);
 
 export default router;
