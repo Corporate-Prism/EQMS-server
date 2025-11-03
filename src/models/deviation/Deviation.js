@@ -161,7 +161,19 @@ const DeviationSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Auth",
             required: true
-        }
+        },
+        submittedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Auth",
+            default: null
+        },
+        submittedAt: {
+            type: Date,
+            default: null,
+        },
+        // reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+        // reviewedAt: { type: Date },
+        // reviewComments: { type: String },
     },
     { timestamps: true }
 );

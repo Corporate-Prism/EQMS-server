@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Deviation from "../../models/deviation/Deviation.js";
 import Attachments from "../../models/deviation/Attachments.js";
+import Auth from "../../models/Auth.js";
 import DeviationImpact from "../../models/deviation/DeviationImpact.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 
@@ -222,5 +223,78 @@ export const getDeviationById = async (req, res) => {
       success: false,
       message: err.message,
     });
+  }
+};
+
+export const submitDeviationForReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deviation = await Deviation.findById(id).populate("department createdBy");
+    if (!deviation)return res.status(404).send({ message: "Deviation not found" });
+    if (String(req.user.department._id) !== String(deviation.department?._id)) {
+      return res.status(403).send({
+        message:
+          "You can only submit deviations that belong to your own department",
+      });
+    }
+    if (deviation.status !== "Draft") {
+      return res.status(400).send({
+        message: "Only draft deviations can be submitted for review",
+      });
+    }
+    deviation.status = "Under Department Head Review";
+    deviation.submittedBy = req.user._id;
+    deviation.submittedAt = new Date();
+    await deviation.save();
+    return res.status(200).send({
+      message: "Deviation submitted for review successfully",
+      deviation,
+    });
+  } catch (error) {
+    console.error("Error submitting deviation:", error);
+    return res.status(500).send({
+      message: "Error submitting deviation",
+      error: error.message,
+    });
+  }
+};
+
+export const reviewDeviation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, comments } = req.body;
+    const userId = req.user._id;
+    const deviation = await Deviation.findById(id).populate("department createdBy");
+    if (!deviation) return res.status(404).send({ message: "Deviation not found" });
+    const reviewer = await Auth.findById(userId).populate("role", "roleName");
+    console.log("this is reviewer", reviewer)
+    if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
+    if (String(reviewer.department) !== String(deviation.department._id)) {
+      return res.status(403).send({ message: "You can only review deviations from your own department" });
+    }
+    if (reviewer.role.roleName !== "Reviewer") {
+      return res.status(403).send({ message: "Only users with Reviewer role can review this deviation" });
+    }
+    if (deviation.status !== "Under Department Head Review") {
+      return res.status(400).send({ message: "This deviation is not under review" });
+    }
+    let newStatus;
+    if (action === "Approved") newStatus = "Approved by Department Head";
+    else if (action === "Returned") newStatus = "Revision Required";
+    else return res.status(400).send({ message: "Invalid action" });
+    deviation.status = newStatus;
+    deviation.review_history.push({
+      reviewer: userId,
+      role: reviewer.role,
+      action,
+      comments,
+    });
+    await deviation.save();
+    return res.status(200).send({
+      message: `Deviation ${action.toLowerCase()} successfully`,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error reviewing deviation", error: error.message });
   }
 };
