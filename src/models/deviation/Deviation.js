@@ -18,6 +18,8 @@ const DeviationSchema = new mongoose.Schema(
             enum: [
                 "Draft",
                 "Under Department Head Review",
+                "Approved by Department Head",
+                "Revision Required"
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -171,9 +173,9 @@ const DeviationSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
-        // reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
-        // reviewedAt: { type: Date },
-        // reviewComments: { type: String },
+        reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+        reviewedAt: { type: Date },
+        reviewComments: { type: String },
     },
     { timestamps: true }
 );
