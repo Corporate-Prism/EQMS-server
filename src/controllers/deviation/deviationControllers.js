@@ -151,6 +151,7 @@ export const getDeviations = async (req, res) => {
       .populate("detailedDescription.attachments", "deviationId attachmentUrl")
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
       .populate("createdBy", "name")
+      .populate("submittedBy", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -199,6 +200,7 @@ export const getDeviationById = async (req, res) => {
       .populate("detailedDescription.attachments", "deviationId attachmentUrl")
       .populate("relatedRecords.attachments", "deviationId attachmentUrl")
       .populate("createdBy", "name")
+      .populate("submittedBy", "name")
       .populate({
         path: "impactAssessment",
         populate: {
@@ -230,8 +232,9 @@ export const submitDeviationForReview = async (req, res) => {
   try {
     const { id } = req.params;
     const deviation = await Deviation.findById(id).populate("department createdBy");
-    if (!deviation)return res.status(404).send({ message: "Deviation not found" });
-    if (String(req.user.department._id) !== String(deviation.department?._id)) {
+    if (!deviation) return res.status(404).send({ message: "Deviation not found" });
+    if (req.user.department.departmentName !== "QA" &&
+      String(req.user.department._id) !== String(deviation.department?._id)) {
       return res.status(403).send({
         message:
           "You can only submit deviations that belong to your own department",
@@ -248,6 +251,7 @@ export const submitDeviationForReview = async (req, res) => {
     await deviation.save();
     return res.status(200).send({
       message: "Deviation submitted for review successfully",
+      success: true,
       deviation,
     });
   } catch (error) {
@@ -269,7 +273,7 @@ export const reviewDeviation = async (req, res) => {
     const reviewer = await Auth.findById(userId).populate("role", "roleName");
     console.log("this is reviewer", reviewer)
     if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
-    if (String(reviewer.department) !== String(deviation.department._id)) {
+    if (String(reviewer.department._id) !== String(deviation.department._id)) {
       return res.status(403).send({ message: "You can only review deviations from your own department" });
     }
     if (reviewer.role.roleName !== "Reviewer") {
