@@ -22,6 +22,7 @@ import questionRoutes from "./src/routes/questionRoutes.js";
 import attachmentRoutes from "./src/routes/deviation/attachmentRoutes.js";
 import deviationRoutes from "./src/routes/deviation/deviationRoutes.js";
 import documentRoutes from "./src/routes/document/documentRoutes.js";
+import investigationTeamRoutes from "./src/routes/deviation/investigationTeamRoutes.js";
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use("/api/v1/questions", questionRoutes);
 app.use("/api/v1/attachments", attachmentRoutes);
 app.use("/api/v1/deviations", deviationRoutes);
 app.use("/api/v1/documents", documentRoutes);
+app.use("/api/v1/investigation-teams", investigationTeamRoutes);
 
 app.listen(PORT, () => {
   connectDB();
