@@ -19,7 +19,8 @@ const DeviationSchema = new mongoose.Schema(
                 "Draft",
                 "Under Department Head Review",
                 "Approved By Department Head",
-                "Accepted By QA"
+                "Accepted By QA",
+                "Investigation Team Assigned"
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -179,6 +180,15 @@ const DeviationSchema = new mongoose.Schema(
         qaReviewer: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
         qaReviewedAt: { type: Date },
         qaComments: { type: String },
+        investigationTeam: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "InvestigationTeam",
+            default: null
+        },
+        investigationAssignedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Auth",
+        },
     },
     { timestamps: true }
 );

@@ -154,6 +154,18 @@ export const getDeviations = async (req, res) => {
       .populate("submittedBy", "name")
       .populate("reviewedBy", "name")
       .populate("qaReviewer", "name")
+      .populate("investigationAssignedBy", "name")
+      .populate({
+        path: "investigationTeam",
+        populate: {
+          path: "members.user",
+          select: "name role",
+          populate: {
+            path: "role",
+            select: "roleName"
+          }
+        },
+      })
       .populate({
         path: "impactAssessment",
         populate: {
@@ -205,6 +217,18 @@ export const getDeviationById = async (req, res) => {
       .populate("submittedBy", "name")
       .populate("reviewedBy", "name")
       .populate("qaReviewer", "name")
+      .populate("investigationAssignedBy", "name")
+      .populate({
+        path: "investigationTeam",
+        populate: {
+          path: "members.user",
+          select: "name role",
+          populate: {
+            path: "role",
+            select: "roleName"
+          }
+        },
+      })
       .populate({
         path: "impactAssessment",
         populate: {
