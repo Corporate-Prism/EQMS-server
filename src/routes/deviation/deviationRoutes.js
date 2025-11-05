@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
-import { authAndAuthorize, departmentAccessMiddleware } from "../../middlewares/authMiddleware.js";
+import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getDeviations)
+router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), getDeviations)
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approve
  *       500:
  *         description: Server error
  */
-router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), departmentAccessMiddleware, getDeviationsSummary)
+router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), getDeviationsSummary)
 
 /**
  * @swagger
@@ -150,7 +150,6 @@ router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "
 router.get(
   "/:id",
   authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
-  departmentAccessMiddleware,
   getDeviationById
 );
 
