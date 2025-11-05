@@ -161,3 +161,54 @@ export const recordTeamImpact = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 }
+
+export const recordRootCauseAnalysis = async (req, res) => {
+  try {
+    const { deviationId, answers } = req.body;
+    const userId = req.user._id;
+    if (!deviationId || !answers || !Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "deviationId and non-empty answers array are required.",
+      });
+    }
+    const deviation = await Deviation.findById(deviationId).populate("investigationTeam");
+    if (!deviation)
+      return res.status(404).json({ success: false, message: "Deviation not found." });
+    if (deviation.status !== "Team Impact Assessment Done") {
+      return res.status(400).json({
+        success: false,
+        message: "Root Cause Analysis can only be recorded after team impact assessment is done.",
+      });
+    }
+    const team = await InvestigationTeam.findById(deviation.investigationTeam);
+    if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
+    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to record root cause analysis for this deviation.",
+      });
+    }
+    const newRCA = new DeviationImpact({
+      deviationId,
+      answers,
+    });
+    await newRCA.save();
+    deviation.rootCauseAnalysis = newRCA._id;
+    deviation.status = "Root Cause Analysis Done";
+    await deviation.save();
+    res.status(201).json({
+      success: true,
+      message: "Root cause analysis recorded successfully.",
+      rootCauseAnalysis: newRCA,
+    });
+  } catch (error) {
+    console.error("Error recording root cause analysis:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while recording root cause analysis.",
+      error: error.message,
+    });
+  }
+};

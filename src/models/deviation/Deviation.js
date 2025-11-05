@@ -21,7 +21,8 @@ const DeviationSchema = new mongoose.Schema(
                 "Approved By Department Head",
                 "Accepted By QA",
                 "Investigation Team Assigned",
-                "Team Impact Assessment Done"
+                "Team Impact Assessment Done",
+                "Root Cause Analysis Done",
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -191,6 +192,11 @@ const DeviationSchema = new mongoose.Schema(
             ref: "Auth",
         },
         teamImpactAssessment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "DeviationImpact",
+            default: null,
+        },
+        rootCauseAnalysis: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "DeviationImpact",
             default: null,
