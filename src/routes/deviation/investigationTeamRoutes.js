@@ -1,5 +1,5 @@
 import express from "express";
-import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, recordTeamImpact, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
+import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, recordRootCauseAnalysis, recordTeamImpact, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -332,5 +332,60 @@ router.delete("/:id", authAndAuthorize("System Admin", "Approver", "Creator", "R
  *         description: Server error.
  */
 router.post("/impact-assessment", authAndAuthorize("Creator"), recordTeamImpact);
+
+/**
+ * @swagger
+ * /api/v1/investigation-teams/root-cause-analysis:
+ *   post:
+ *     summary: Record Root Cause Analysis by Investigation Team
+ *     description: Allows members of the assigned investigation team to record the root cause analysis for a deviation after team impact assessment is done.
+ *     tags: [Investigation Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deviationId
+ *               - answers
+ *             properties:
+ *               deviationId:
+ *                 type: string
+ *                 description: The ID of the deviation for which the team is recording the root cause analysis.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               answers:
+ *                 type: array
+ *                 description: A list of question-answer pairs for the root cause analysis.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     questionId:
+ *                       type: string
+ *                       description: ID of the root cause analysis question.
+ *                       example: "67124f9c1234567890abcd12"
+ *                     answer:
+ *                       type: string
+ *                       description: Answer provided by the team.
+ *                       example: "Root cause identified as equipment malfunction."
+ *                     comment:
+ *                       type: string
+ *                       description: Optional additional comments.
+ *                       example: "Preventive maintenance schedule to be updated."
+ *     responses:
+ *       201:
+ *         description: Root cause analysis recorded successfully.
+ *       400:
+ *         description: Invalid status or missing fields.
+ *       403:
+ *         description: User not authorized.
+ *       404:
+ *         description: Deviation or team not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/root-cause-analysis", authAndAuthorize("Creator"), recordRootCauseAnalysis);
 
 export default router;
