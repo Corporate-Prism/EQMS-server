@@ -20,7 +20,8 @@ const DeviationSchema = new mongoose.Schema(
                 "Under Department Head Review",
                 "Approved By Department Head",
                 "Accepted By QA",
-                "Investigation Team Assigned"
+                "Investigation Team Assigned",
+                "Team Impact Assessment Done"
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -188,6 +189,11 @@ const DeviationSchema = new mongoose.Schema(
         investigationAssignedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Auth",
+        },
+        teamImpactAssessment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "DeviationImpact",
+            default: null,
         },
     },
     { timestamps: true }

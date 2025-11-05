@@ -1,5 +1,5 @@
 import express from "express";
-import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
+import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, recordTeamImpact, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -277,5 +277,60 @@ router.put("/:id", authAndAuthorize("System Admin", "Approver", "Creator", "Revi
  *         description: Server error.
  */
 router.delete("/:id", authAndAuthorize("System Admin", "Approver", "Creator", "Reviewer"), deleteInvestigationTeam);
+
+/**
+ * @swagger
+ * /api/v1/investigation-teams/impact-assessment:
+ *   post:
+ *     summary: Record Impact Assessment by Investigation Team
+ *     description: Allows members of the assigned investigation team to record their impact assessment for a deviation.
+ *     tags: [Investigation Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deviationId
+ *               - answers
+ *             properties:
+ *               deviationId:
+ *                 type: string
+ *                 description: The ID of the deviation for which the team is recording the impact assessment.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               answers:
+ *                 type: array
+ *                 description: A list of question-answer pairs for the impact assessment.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     questionId:
+ *                       type: string
+ *                       description: ID of the impact assessment question.
+ *                       example: "67124f9c1234567890abcd12"
+ *                     answer:
+ *                       type: string
+ *                       description: Answer provided by the team.
+ *                       example: "Yes, deviation affects batch integrity."
+ *                     comment:
+ *                       type: string
+ *                       description: Optional additional comments.
+ *                       example: "Further investigation needed."
+ *     responses:
+ *       201:
+ *         description: Team impact assessment recorded successfully.
+ *       400:
+ *         description: Invalid status or missing fields.
+ *       403:
+ *         description: User not authorized.
+ *       404:
+ *         description: Deviation or team not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/impact-assessment", authAndAuthorize("Creator"), recordTeamImpact);
 
 export default router;

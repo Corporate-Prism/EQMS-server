@@ -1,4 +1,5 @@
 import Deviation from "../../models/deviation/Deviation.js";
+import DeviationImpact from "../../models/deviation/DeviationImpact.js";
 import InvestigationTeam from "../../models/deviation/InvestigationTeam.js";
 
 
@@ -129,3 +130,34 @@ export const deleteInvestigationTeam = async (req, res) => {
     res.status(500).send({ message: "Error deleting investigation team", error: error.message });
   }
 };
+
+export const recordTeamImpact = async (req, res) => {
+  try {
+    const { deviationId, answers } = req.body;
+    const userId = req.user._id;
+    const deviation = await Deviation.findById(deviationId).populate("investigationTeam");
+    if (!deviation) return res.status(404).json({ message: "Deviation not found" });
+    if (deviation.status !== "Investigation Team Assigned") return res.status(400).json({ message: "Impact assessment can only be recorded when investigation team is assigned" });
+    const team = await InvestigationTeam.findById(deviation.investigationTeam);
+    if (!team) return res.status(404).json({ message: "Investigation team not found" });
+    const isMember = team.members.some(m => m.user.toString() === userId.toString());
+    if (!isMember) return res.status(403).json({ message: "You are not authorized to record impact assessment for this deviation" });
+    const newImpact = new DeviationImpact({
+      deviationId,
+      answers,
+    });
+    await newImpact.save();
+    deviation.teamImpactAssessment = newImpact._id;
+    deviation.status = "Team Impact Assessment Done";
+    await deviation.save();
+    res.status(201).json({
+      success: true,
+      message: "Team impact assessment recorded successfully",
+      impact: newImpact,
+    });
+
+  } catch (error) {
+    console.error("Error recording team impact assessment:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+}

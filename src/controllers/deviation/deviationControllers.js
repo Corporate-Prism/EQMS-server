@@ -239,7 +239,14 @@ export const getDeviationById = async (req, res) => {
           path: "answers.questionId",
           select: "questionText responseType",
         },
-      });
+      })
+      .populate({
+        path: "teamImpactAssessment",
+        populate: {
+          path: "answers.questionId",
+          select: "questionText responseType",
+        }
+      })
 
     if (!deviation) {
       return res.status(404).json({
