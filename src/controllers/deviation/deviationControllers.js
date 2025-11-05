@@ -187,7 +187,11 @@ export const getDeviations = async (req, res) => {
 
 export const getDeviationsSummary = async (req, res) => {
   try {
-    const deviations = await Deviation.find()
+    let query = {}
+    if (req.user.department.departmentName !== "QA") {
+      query = { department: req.user.department._id }
+    }
+    const deviations = await Deviation.find(query)
       .select("summary deviationNumber")
     res.status(200).json({
       success: true,
