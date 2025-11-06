@@ -212,3 +212,35 @@ export const recordRootCauseAnalysis = async (req, res) => {
     });
   }
 };
+
+export const recordHistoricalCheck = async (req, res) => {
+  try {
+    const { deviationId, similarDeviations } = req.body;
+    const userId = req.user._id;
+    if (!deviationId) return res.status(400).json({ success: false, message: "deviationId is required" });
+    const deviation = await Deviation.findById(deviationId);
+    if (!deviation) return res.status(404).json({ success: false, message: "deviation not found" });
+    if (deviation.status !== "Root Cause Analysis Done") return res.status(400).json({ message: "Historical Check can only be done after root cause analysis." });
+    const team = await InvestigationTeam.findById(deviation.investigationTeam);
+    if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
+    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to record historical check for this deviation.",
+      });
+    }
+    deviation.similarDeviations = similarDeviations || [];
+    deviation.historicalCheckedBy = userId;
+    deviation.status = "Historical Check Done";
+    await deviation.save();
+    res.status(200).json({
+      success: true,
+      message: "Historical check recorded successfully.",
+      data: deviation,
+    });
+  } catch (error) {
+    console.error("Error recording historical check:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
