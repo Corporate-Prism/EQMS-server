@@ -155,6 +155,7 @@ export const getDeviations = async (req, res) => {
       .populate("reviewedBy", "name")
       .populate("qaReviewer", "name")
       .populate("investigationAssignedBy", "name")
+      .populate("historicalCheckedBy", "name")
       .populate({
         path: "investigationTeam",
         populate: {
@@ -172,7 +173,28 @@ export const getDeviations = async (req, res) => {
           path: "answers.questionId",
           select: "questionText responseType",
         },
-      });
+      })
+      .populate({
+        path: "teamImpactAssessment",
+        populate: {
+          path: "answers.questionId",
+          select: "questionText responseType",
+        }
+      })
+      .populate({
+        path: "rootCauseAnalysis",
+        populate: {
+          path: "answers.questionId",
+          select: "questionText responseType",
+        }
+      })
+      .populate({
+        path: "similarDeviations",
+        populate: {
+          path: "deviation",
+          select: "deviationNumber",
+        }
+      })
     res.status(200).json({
       success: true,
       deviations
@@ -224,6 +246,7 @@ export const getDeviationById = async (req, res) => {
       .populate("reviewedBy", "name")
       .populate("qaReviewer", "name")
       .populate("investigationAssignedBy", "name")
+      .populate("historicalCheckedBy", "name")
       .populate({
         path: "investigationTeam",
         populate: {
@@ -254,6 +277,13 @@ export const getDeviationById = async (req, res) => {
         populate: {
           path: "answers.questionId",
           select: "questionText responseType",
+        }
+      })
+      .populate({
+        path: "similarDeviations",
+        populate: {
+          path: "deviation",
+          select: "deviationNumber",
         }
       })
 

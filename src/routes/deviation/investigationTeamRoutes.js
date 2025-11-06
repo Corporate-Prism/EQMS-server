@@ -1,5 +1,5 @@
 import express from "express";
-import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, recordRootCauseAnalysis, recordTeamImpact, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
+import { createInvestigationTeam, deleteInvestigationTeam, getAllInvestigationTeams, getInvestigationTeamById, recordHistoricalCheck, recordRootCauseAnalysis, recordTeamImpact, updateInvestigationTeam } from "../../controllers/deviation/investigationTeamController.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -387,5 +387,50 @@ router.post("/impact-assessment", authAndAuthorize("Creator"), recordTeamImpact)
  *         description: Server error.
  */
 router.post("/root-cause-analysis", authAndAuthorize("Creator"), recordRootCauseAnalysis);
+
+/**
+ * @swagger
+ * /api/v1/investigation-teams/historical-check:
+ *   post:
+ *     summary: Record Historical Check for a Deviation
+ *     description: Records similar past deviations identified after root cause analysis. Only allowed when deviation status is "Root Cause Analysis Done".
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deviationId
+ *               - similarDeviations
+ *             properties:
+ *               deviationId:
+ *                 type: string
+ *                 description: ID of the current deviation being updated.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               similarDeviations:
+ *                 type: array
+ *                 description: Array of similar past deviations for historical checking.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     deviation:
+ *                       type: string
+ *                       description: ObjectId of the related past deviation.
+ *                       example: "671fbb72d91b23001e3a7b21"
+ *     responses:
+ *       200:
+ *         description: Historical check recorded successfully.
+ *       400:
+ *         description: Invalid status or missing required fields.
+ *       404:
+ *         description: Deviation not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/historical-check", authAndAuthorize("Creator"), recordHistoricalCheck)
 
 export default router;

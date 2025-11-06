@@ -23,6 +23,7 @@ const DeviationSchema = new mongoose.Schema(
                 "Investigation Team Assigned",
                 "Team Impact Assessment Done",
                 "Root Cause Analysis Done",
+                "Historical Check Done"
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -200,6 +201,15 @@ const DeviationSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "DeviationImpact",
             default: null,
+        },
+        similarDeviations: [
+            {
+                deviation: { type: mongoose.Schema.Types.ObjectId, ref: "Deviation", }
+            }
+        ],
+        historicalCheckedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Auth",
         },
     },
     { timestamps: true }
