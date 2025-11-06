@@ -62,6 +62,14 @@ router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approve
  *     tags: [Deviations]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Search deviations by summary (case-insensitive)
+ *         example: "temperature deviation"
  *     responses:
  *       200: 
  *         description: List of deviations retrieved successfully

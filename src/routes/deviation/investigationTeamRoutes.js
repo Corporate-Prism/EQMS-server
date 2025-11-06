@@ -134,7 +134,7 @@ router.post("/", authAndAuthorize("Approver"), createInvestigationTeam);
  *       500:
  *         description: Server error.
  */
-router.get("/", authAndAuthorize("System Admin"), getAllInvestigationTeams);
+router.get("/", authAndAuthorize("System Admin, Approver"), getAllInvestigationTeams);
 
 /**
  * @swagger
