@@ -23,7 +23,8 @@ const DeviationSchema = new mongoose.Schema(
                 "Investigation Team Assigned",
                 "Team Impact Assessment Done",
                 "Root Cause Analysis Done",
-                "Historical Check Done"
+                "Historical Check Done",
+                "Immediate Actions In Progress"
                 // "Submitted",
                 // "Returned for Revision",
                 // "Under Department Head Review",
@@ -211,6 +212,18 @@ const DeviationSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Auth",
         },
+        immediateActions: [
+            {
+                title: { type: String, required: true },
+                assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+                status: {
+                    type: String,
+                    enum: ["Pending", "Completed"],
+                    default: "Pending",
+                },
+                completedAt: { type: Date },
+            },
+        ],
     },
     { timestamps: true }
 );

@@ -286,6 +286,13 @@ export const getDeviationById = async (req, res) => {
           select: "deviationNumber",
         }
       })
+      .populate({
+        path: "immediateActions",
+        populate: {
+          path: "assignedTo",
+          select: "name"
+        }
+      })
 
     if (!deviation) {
       return res.status(404).json({
@@ -438,5 +445,36 @@ export const qaReviewDeviation = async (req, res) => {
       message: "Error reviewing deviation by QA",
       error: error.message,
     });
+  }
+};
+
+export const recordCapaNotRequired = async (req, res) => {
+  try {
+    const { deviationId, justification, immediateActions } = req.body;
+    const userId = req.user._id;
+    if (!deviationId || !justification)
+      return res
+        .status(400)
+        .json({ success: false, message: "deviationId and justification are required." });
+    const deviation = await Deviation.findById(deviationId);
+    if (!deviation) return res.status(404).json({ success: false, message: "Deviation not found" });
+    if (deviation.status !== "Historical Check Done")
+      return res
+        .status(400)
+        .json({ message: "CAPA decision can only be recorded after historical check." });
+    deviation.capaRequired = false;
+    deviation.capaJustification = justification;
+    deviation.capaDecisionBy = userId;
+    deviation.immediateActions = immediateActions || [];
+    deviation.status = "Immediate Actions In Progress";
+    await deviation.save();
+    res.status(201).json({
+      success: true,
+      message: "CAPA not required. Immediate actions recorded successfully.",
+      data: deviation,
+    });
+  } catch (error) {
+    console.error("Error recording CAPA not required decision:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaNotRequired, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -364,6 +364,66 @@ router.put("/:id/review", authAndAuthorize("Reviewer"), reviewDeviation);
  *         description: Internal server error
  */
 router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewDeviation);
+
+/**
+ * @swagger
+ * /api/v1/deviations/capa-not-required:
+ *   post:
+ *     summary: Record CAPA Not Required Decision
+ *     description: Records that CAPA is not required and logs immediate corrective/preventive actions as tasks.
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deviationId
+ *               - justification
+ *             properties:
+ *               deviationId:
+ *                 type: string
+ *                 description: ID of the deviation.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               justification:
+ *                 type: string
+ *                 description: Reason CAPA is not required.
+ *                 example: "Isolated incident with immediate correction implemented."
+ *               immediateActions:
+ *                 type: array
+ *                 description: List of immediate corrective/preventive actions to be tracked.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                       example: "Clean and recalibrate equipment"
+ *                     assignedTo:
+ *                       type: string
+ *                       example: "67124f9c1234567890abcd12"
+ *                     status:
+ *                       type: string
+ *                       enum: [Pending, Completed]
+ *                       example: "Pending"
+ *     responses:
+ *       201:
+ *         description: CAPA not required decision recorded successfully.
+ *       400:
+ *         description: Invalid input or deviation status.
+ *       404:
+ *         description: Deviation not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post(
+  "/capa-not-required",
+  authAndAuthorize("Approver"),
+  recordCapaNotRequired
+);
+
 
 
 export default router;
