@@ -394,7 +394,7 @@ router.post("/root-cause-analysis", authAndAuthorize("Creator"), recordRootCause
  *   post:
  *     summary: Record Historical Check for a Deviation
  *     description: Records similar past deviations identified after root cause analysis. Only allowed when deviation status is "Root Cause Analysis Done".
- *     tags: [Deviations]
+ *     tags: [Investigation Teams]
  *     security:
  *       - bearerAuth: []
  *     requestBody:

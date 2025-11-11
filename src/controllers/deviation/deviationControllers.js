@@ -4,6 +4,7 @@ import Attachments from "../../models/deviation/Attachments.js";
 import Auth from "../../models/Auth.js";
 import DeviationImpact from "../../models/deviation/DeviationImpact.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
+import CAPA from "../../models/capa/Capa.js";
 
 export const createDeviation = async (req, res) => {
   const session = await mongoose.startSession();
@@ -448,33 +449,66 @@ export const qaReviewDeviation = async (req, res) => {
   }
 };
 
-export const recordCapaNotRequired = async (req, res) => {
+export const recordCapaDecision = async (req, res) => {
   try {
-    const { deviationId, justification, immediateActions } = req.body;
+    const { deviationId, capaRequired, justification, immediateActions } = req.body;
     const userId = req.user._id;
-    if (!deviationId || !justification)
+
+    if (deviationId === undefined || capaRequired === undefined) {
       return res
         .status(400)
-        .json({ success: false, message: "deviationId and justification are required." });
+        .json({ success: false, message: "deviationId and capaRequired are required." });
+    }
+
     const deviation = await Deviation.findById(deviationId);
-    if (!deviation) return res.status(404).json({ success: false, message: "Deviation not found" });
-    if (deviation.status !== "Historical Check Done")
+    if (!deviation) return res.status(404).json({ success: false, message: "Deviation not found." });
+
+    if (deviation.status !== "Historical Check Done") {
       return res
         .status(400)
-        .json({ message: "CAPA decision can only be recorded after historical check." });
-    deviation.capaRequired = false;
-    deviation.capaJustification = justification;
+        .json({ success: false, message: "CAPA decision can only be recorded after historical check." });
+    }
+
+    deviation.capaRequired = capaRequired;
     deviation.capaDecisionBy = userId;
-    deviation.immediateActions = immediateActions || [];
-    deviation.status = "Immediate Actions In Progress";
-    await deviation.save();
-    res.status(201).json({
-      success: true,
-      message: "CAPA not required. Immediate actions recorded successfully.",
-      data: deviation,
-    });
+
+    if (!capaRequired) {
+      if (!justification) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Justification is required when CAPA is not required." });
+      }
+
+      deviation.capaJustification = justification;
+      deviation.immediateActions = immediateActions || [];
+      deviation.status = "Immediate Actions In Progress";
+      await deviation.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "CAPA not required. Immediate actions recorded successfully.",
+        data: deviation,
+      });
+    }
+
+    if (capaRequired) {
+      const capa = await CAPA.create({
+        deviation: deviationId,
+        createdBy: userId,
+      });
+
+      deviation.capaReference = capa._id;
+      deviation.status = "CAPA Initiated";
+      await deviation.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "CAPA created and linked to deviation successfully.",
+        data: capa,
+      });
+    }
   } catch (error) {
-    console.error("Error recording CAPA not required decision:", error);
+    console.error("Error recording CAPA decision:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
