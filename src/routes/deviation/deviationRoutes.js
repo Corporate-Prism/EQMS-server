@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaNotRequired, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaDecision, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -367,11 +367,15 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewDeviation);
 
 /**
  * @swagger
- * /api/v1/deviations/capa-not-required:
+ * /api/v1/deviations/record-capa-decision:
  *   post:
- *     summary: Record CAPA Not Required Decision
- *     description: Records that CAPA is not required and logs immediate corrective/preventive actions as tasks.
- *     tags: [Deviations]
+ *     summary: Record CAPA decision for a deviation
+ *     description: |
+ *       Records the CAPA decision for a given deviation.  
+ *       - If CAPA is **not required**, a justification and immediate actions are recorded.  
+ *       - If CAPA is **required**, a CAPA record is created and linked to the deviation.
+ *     tags:
+ *       - Deviations
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -382,48 +386,102 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewDeviation);
  *             type: object
  *             required:
  *               - deviationId
- *               - justification
+ *               - capaRequired
  *             properties:
  *               deviationId:
  *                 type: string
- *                 description: ID of the deviation.
- *                 example: "67204e72b62e5a001e3c5a29"
+ *                 description: ID of the deviation
+ *                 example: "671f8761f234a3b12c9fbd45"
+ *               capaRequired:
+ *                 type: boolean
+ *                 description: Whether CAPA is required for this deviation
+ *                 example: false
  *               justification:
  *                 type: string
- *                 description: Reason CAPA is not required.
- *                 example: "Isolated incident with immediate correction implemented."
+ *                 description: Justification for not requiring CAPA (required if capaRequired = false)
+ *                 example: "Issue resolved with procedural correction, no further action needed."
  *               immediateActions:
  *                 type: array
- *                 description: List of immediate corrective/preventive actions to be tracked.
+ *                 description: List of immediate corrective/preventive actions (only if CAPA not required)
  *                 items:
  *                   type: object
  *                   properties:
  *                     title:
  *                       type: string
- *                       example: "Clean and recalibrate equipment"
+ *                       example: "Clean and sanitize affected area."
  *                     assignedTo:
  *                       type: string
- *                       example: "67124f9c1234567890abcd12"
+ *                       example: "671f8761f234a3b12c9fbd45"
  *                     status:
  *                       type: string
- *                       enum: [Pending, Completed]
- *                       example: "Pending"
+ *                       example: pending
  *     responses:
  *       201:
- *         description: CAPA not required decision recorded successfully.
+ *         description: CAPA decision recorded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "CAPA created and linked to deviation successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "67202f25f2452a6e09cd3a12"
+ *                     deviation:
+ *                       type: string
+ *                       example: "671f8761f234a3b12c9fbd45"
+ *                     createdBy:
+ *                       type: string
+ *                       example: "671d5fe3b8d71e77af9b3c42"
  *       400:
- *         description: Invalid input or deviation status.
+ *         description: Bad Request (Missing or invalid fields)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Justification is required when CAPA is not required."
  *       404:
- *         description: Deviation not found.
+ *         description: Deviation not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Deviation not found."
  *       500:
- *         description: Server error.
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error recording CAPA decision: Something went wrong."
  */
-router.post(
-  "/capa-not-required",
-  authAndAuthorize("Approver"),
-  recordCapaNotRequired
-);
 
-
+router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDecision);
 
 export default router;
