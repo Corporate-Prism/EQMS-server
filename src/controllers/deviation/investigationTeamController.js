@@ -66,7 +66,7 @@ export const getAllInvestigationTeams = async (req, res) => {
 export const getInvestigationTeamById = async (req, res) => {
   try {
     const { id } = req.params;
-    const team = await InvestigationTeam.findById(id)
+    let team = await InvestigationTeam.findById(id)
       .populate({
         path: "deviation",
         select: "deviationNumber status department",
@@ -78,8 +78,24 @@ export const getInvestigationTeamById = async (req, res) => {
         populate: { path: "role", select: "roleName" },
       })
       .populate("createdBy", "name email");
-
-    if (!team) return res.status(404).send({ message: "Investigation team not found" });
+    if (!team) {
+      team = await InvestigationTeam.findOne({ deviation: id })
+        .populate({
+          path: "deviation",
+          select: "deviationNumber status department",
+          populate: { path: "department", select: "departmentName" },
+        })
+        .populate({
+          path: "members.user",
+          select: "name email",
+          populate: { path: "role", select: "roleName" },
+        })
+        .populate("createdBy", "name email");
+    }
+    if (!team)
+      return res
+        .status(404)
+        .send({ success: false, message: "Investigation team not found for provided ID or deviation." });
 
     res.status(200).send({
       success: true,
@@ -87,9 +103,10 @@ export const getInvestigationTeamById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching team:", error);
-    res.status(500).send({ message: "Error fetching team", error: error.message });
+    res.status(500).send({ success: false, message: "Error fetching team", error: error.message });
   }
 };
+
 
 export const updateInvestigationTeam = async (req, res) => {
   try {
