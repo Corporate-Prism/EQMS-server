@@ -1,5 +1,5 @@
 import express from "express";
-import { createCAPA, getAllCAPA } from "../../controllers/capa/capaControllers.js";
+import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary } from "../../controllers/capa/capaControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
 
@@ -112,6 +112,38 @@ router.get("/", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admi
 
 /**
  * @swagger
+ * /api/v1/capa/summary:
+ *   get:
+ *     summary: Get all CAPA records (summary view)
+ *     tags: [CAPA]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Search CAPAs by reasonForCAPA (case-insensitive)
+ *         example: "Repeated deviations observed"
+ *     responses:
+ *       200: 
+ *         description: List of CAPAs retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       500:
+ *         description: Server error
+ */
+router.get(
+    "/summary",
+    authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
+    getCAPASummary
+);
+
+/**
+ * @swagger
  * /api/v1/capa/{id}:
  *   get:
  *     summary: Get a single CAPA record by ID
@@ -137,6 +169,6 @@ router.get("/", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admi
  *       500:
  *         description: Server error
  */
-
+router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin"), getCAPAById)
 
 export default router;
