@@ -4,19 +4,58 @@ const CAPASchema = new mongoose.Schema(
   {
     capaNumber: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
+    },
+    initiationDate: {
+      type: Date,
+    },
+    targetClosureDate: {
+      type: Date,
+    },
+    reasonForCAPA: {
+      type: String,
+      trim: true,
+    },
+    relatedRecords: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Deviation",
+    },
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+    },
+    immediateCorrectionTaken: {
+      type: String,
+      trim: true,
+    },
+    investigationAndRootCause: {
+      type: String,
+      trim: true,
+    },
+    correctiveActions: {
+      type: String,
+      trim: true,
+    },
+    preventiveActions: {
+      type: String,
+      trim: true,
+    },
+    supportingDocuments: {
+      attachments: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Attachments",
+        },
+      ],
     },
     deviation: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Deviation",
-      required: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
-      required: true,
     },
   },
   { timestamps: true }

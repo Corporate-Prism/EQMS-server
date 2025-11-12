@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+export const upload = multer({ storage });
 
 router.post(
   "/create",
@@ -483,5 +483,55 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewDeviation);
  */
 
 router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDecision);
+
+/**
+ * @swagger
+ * /api/v1/deviations/immediate-actions/status:
+ *   patch:
+ *     summary: Update status of an immediate action
+ *     description: Allows assigned users to update the status of an immediate corrective/preventive action. When all actions are marked as Completed, the deviation status is updated to "Reviewed By Team".
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deviationId
+ *               - actionIndex
+ *               - status
+ *             properties:
+ *               deviationId:
+ *                 type: string
+ *                 description: ID of the deviation.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               actionIndex:
+ *                 type: integer
+ *                 description: Index of the immediate action to update.
+ *                 example: 0
+ *               status:
+ *                 type: string
+ *                 enum: [Pending, Completed]
+ *                 description: New status of the action.
+ *                 example: "Completed"
+ *     responses:
+ *       200:
+ *         description: Immediate action status updated successfully.
+ *       400:
+ *         description: Invalid input or missing fields.
+ *       404:
+ *         description: Deviation not found.
+ *       500:
+ *         description: Server error.
+ */
+router.patch(
+  "/immediate-actions/status",
+  authAndAuthorize("System Admin","Creator", "Reviewer", "Approver"),
+  // updateImmediateActionStatus
+);
+
 
 export default router;
