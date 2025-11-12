@@ -119,3 +119,26 @@ export const getCAPAById = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching CAPA", error: err.message });
   }
 };
+
+export const getCAPASummary = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = {};
+    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+    if (search && search.trim() !== "") {
+      query.reasonForCAPA = { $regex: search, $options: "i" };
+    }
+    const capas = await CAPA.find(query)
+      .select("capaNumber reasonForCAPA initiationDate targetClosureDate");
+    res.status(200).json({
+      success: true,
+      capas,
+    });
+  } catch (err) {
+    console.error("Error fetching CAPA summary:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
