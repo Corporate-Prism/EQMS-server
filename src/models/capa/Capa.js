@@ -17,6 +17,17 @@ const CAPASchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: [
+        "Draft",
+        "Under Department Head Review",
+        "Approved By Department Head",
+        "Accepted By QA",
+        "Investigation Team Assigned"
+      ],
+      default: "Draft"
+    },
     relatedRecords: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Deviation",
@@ -54,6 +65,30 @@ const CAPASchema = new mongoose.Schema(
       ref: "Deviation",
     },
     createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
+    },
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
+      default: null
+    },
+    submittedAt: {
+      type: Date,
+      default: null,
+    },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+    reviewedAt: { type: Date },
+    reviewComments: { type: String },
+    qaReviewer: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+    qaReviewedAt: { type: Date },
+    qaComments: { type: String },
+    investigationTeam: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CapaInvestigationTeam",
+      default: null
+    },
+    investigationAssignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
     },
