@@ -142,3 +142,39 @@ export const getCAPASummary = async (req, res) => {
     });
   }
 };
+
+export const submitCapaForReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const capa = await CAPA.findById(id);
+    // const capa = await CAPA.findById(id).populate("department createdBy");
+    if(!capa) return res.status(404).send({ message: "capa not found" });
+    if (req.user.department.departmentName !== "QA" &&
+      String(req.user.department._id) !== String(capa.department?._id)) {
+      return res.status(403).send({
+        message:
+          "You can only submit capa that belong to your own department",
+      });
+    }
+    if (capa.status !== "Draft") {
+      return res.status(400).send({
+        message: "Only draft capa can be submitted for review",
+      });
+    }
+    capa.status = "Under Department Head Review";
+    capa.submittedBy = req.user._id;
+    capa.submittedAt = new Date();
+    await capa.save();
+    return res.status(200).send({
+      message: "capa submitted for review successfully",
+      success: true,
+      capa,
+    });
+  } catch (error) {
+    console.error("Error submitting capa:", error);
+    return res.status(500).send({
+      message: "Error submitting capa",
+      error: error.message,
+    });
+  }
+};

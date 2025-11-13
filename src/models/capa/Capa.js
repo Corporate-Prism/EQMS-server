@@ -17,6 +17,14 @@ const CAPASchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: [
+        "Draft",
+        "Under Department Head Review",
+      ],
+      default: "Draft"
+    },
     relatedRecords: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Deviation",
@@ -56,6 +64,15 @@ const CAPASchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
+    },
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
+      default: null
+    },
+    submittedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

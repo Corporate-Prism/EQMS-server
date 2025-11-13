@@ -1,5 +1,5 @@
 import express from "express";
-import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary } from "../../controllers/capa/capaControllers.js";
+import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
 
@@ -171,4 +171,93 @@ router.get(
  */
 router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin"), getCAPAById)
 
+/**
+ * @swagger
+ * /api/v1/capa/{id}/submit:
+ *   put:
+ *     summary: Submit a capa for review
+ *     tags: [CAPA]
+ *     description: Change the capa status from Draft to Submitted and record who submitted it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: capa ID to submit for review
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments:
+ *                 type: string
+ *                 description: Optional comments added during submission
+ *     responses:
+ *       200:
+ *         description: capa submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: capa submitted for review successfully
+ *                 deviation:
+ *                   type: object
+ *                   description: Updated capa details
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1221
+ *                     title:
+ *                       type: string
+ *                       example: Temperature deviation in Room 104
+ *                     status:
+ *                       type: string
+ *                       example: Submitted
+ *                     submittedBy:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1229
+ *                     submittedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-10-31T12:45:23.000Z
+ *       400:
+ *         description: Invalid operation or capa not in Draft state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Only Draft capa can be submitted for review
+ *       404:
+ *         description: capa not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: capa not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error submitting capa
+ */
+router.put("/:id/submit", authAndAuthorize("Creator"), submitCapaForReview);
 export default router;
