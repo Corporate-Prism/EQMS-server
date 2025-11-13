@@ -1,5 +1,5 @@
 import express from "express";
-import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
+import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, qaReviewCapa, reviewCapa, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
 
@@ -260,4 +260,119 @@ router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System A
  *                   example: Error submitting capa
  */
 router.put("/:id/submit", authAndAuthorize("Creator"), submitCapaForReview);
+
+/**
+ * @swagger
+ * /api/v1/capa/{id}/review:
+ *   put:
+ *     summary: Review a capa (approve or reject)
+ *     description: Allows a department head or QA reviewer to approve or reject a deviation under review.
+ *     tags:
+ *       - CAPA
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: capa ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               reviewComments:
+ *                 type: string
+ *                 example: "capa reviewed and approved."
+ *     responses:
+ *       200:
+ *         description: capa reviewed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: capa approved successfully.
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 capa:
+ *                   type: object
+ *       400:
+ *         description: Invalid request (wrong status or invalid action).
+ *       403:
+ *         description: Unauthorized — user cannot review this deviation.
+ *       404:
+ *         description: capa or reviewer not found.
+ *       500:
+ *         description: Server error.
+ */
+
+router.put("/:id/review", authAndAuthorize("Reviewer"), reviewCapa);
+
+/**
+ * @swagger
+ * /api/v1/capa/{id}/qa-review:
+ *   put:
+ *     summary: QA review capa (accept or reject)
+ *     tags: [CAPA]
+ *     description: QA Approver reviews a capa after Department Head approval.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: capa ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               qaComments:
+ *                 type: string
+ *                 example: "QA has reviewed and accepted the capa."
+ *     responses:
+ *       200:
+ *         description: capa reviewed by QA successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 capa:
+ *                   type: object
+ *       400:
+ *         description: Invalid status or action
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: capa not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewCapa);
+
 export default router;

@@ -22,6 +22,9 @@ const CAPASchema = new mongoose.Schema(
       enum: [
         "Draft",
         "Under Department Head Review",
+        "Approved By Department Head",
+        "Accepted By QA",
+        "Investigation Team Assigned"
       ],
       default: "Draft"
     },
@@ -73,6 +76,21 @@ const CAPASchema = new mongoose.Schema(
     submittedAt: {
       type: Date,
       default: null,
+    },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+    reviewedAt: { type: Date },
+    reviewComments: { type: String },
+    qaReviewer: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+    qaReviewedAt: { type: Date },
+    qaComments: { type: String },
+    investigationTeam: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CapaInvestigationTeam",
+      default: null
+    },
+    investigationAssignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
     },
   },
   { timestamps: true }

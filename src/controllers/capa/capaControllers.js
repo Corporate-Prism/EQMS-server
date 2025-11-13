@@ -4,6 +4,7 @@ import Deviation from "../../models/deviation/Deviation.js";
 import Attachments from "../../models/deviation/Attachments.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import fs from "fs";
+import Auth from "../../models/Auth.js";
 
 export const createCAPA = async (req, res) => {
   const session = await mongoose.startSession();
@@ -80,9 +81,24 @@ export const getAllCAPA = async (req, res) => {
     const capas = await CAPA.find()
       .populate("department", "departmentName")
       .populate("deviation", "deviationNumber summary")
-      .populate("createdBy", "username email")
-      .populate("relatedRecords.attachments")
-      .populate("supportingDocuments.attachments");
+      .populate("createdBy", "name")
+      .populate("relatedRecords", "summary deviationNumber")
+      .populate("supportingDocuments.attachments")
+      .populate("submittedBy", "name")
+      .populate("reviewedBy", "name")
+      .populate("qaReviewer", "name")
+      .populate("investigationAssignedBy", "name")
+      .populate({
+        path: "investigationTeam",
+        populate: {
+          path: "members.user",
+          select: "name role",
+          populate: {
+            path: "role",
+            select: "roleName"
+          }
+        },
+      })
 
     res.status(200).json({
       success: true,
@@ -101,9 +117,24 @@ export const getCAPAById = async (req, res) => {
     const capa = await CAPA.findById(id)
       .populate("department", "departmentName")
       .populate("deviation", "deviationNumber summary")
-      .populate("createdBy", "username email")
-      .populate("relatedRecords.attachments")
-      .populate("supportingDocuments.attachments");
+      .populate("createdBy", "name")
+      .populate("relatedRecords", "summary deviationNumber")
+      .populate("supportingDocuments.attachments")
+      .populate("submittedBy", "name")
+      .populate("reviewedBy", "name")
+      .populate("qaReviewer", "name")
+      .populate("investigationAssignedBy", "name")
+      .populate({
+        path: "investigationTeam",
+        populate: {
+          path: "members.user",
+          select: "name role",
+          populate: {
+            path: "role",
+            select: "roleName"
+          }
+        },
+      })
 
     if (!capa) {
       return res.status(404).json({ success: false, message: "CAPA not found" });
@@ -147,8 +178,7 @@ export const submitCapaForReview = async (req, res) => {
   try {
     const { id } = req.params;
     const capa = await CAPA.findById(id);
-    // const capa = await CAPA.findById(id).populate("department createdBy");
-    if(!capa) return res.status(404).send({ message: "capa not found" });
+    if (!capa) return res.status(404).send({ message: "capa not found" });
     if (req.user.department.departmentName !== "QA" &&
       String(req.user.department._id) !== String(capa.department?._id)) {
       return res.status(403).send({
@@ -174,6 +204,106 @@ export const submitCapaForReview = async (req, res) => {
     console.error("Error submitting capa:", error);
     return res.status(500).send({
       message: "Error submitting capa",
+      error: error.message,
+    });
+  }
+};
+
+export const reviewCapa = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, reviewComments } = req.body;
+    const userId = req.user._id;
+    const capa = await CAPA.findById(id);
+    if (!capa) return res.status(404).send({ message: "capa not found" });
+    const reviewer = await Auth.findById(userId)
+      .populate("role", "roleName")
+      .populate("department", "departmentName");
+    if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
+    if (
+      reviewer.department.departmentName !== "QA" &&
+      String(reviewer.department._id) !== String(capa.department._id)
+    ) {
+      return res.status(403).send({
+        message:
+          "You can only review deviations from your own department (QA can review all).",
+      });
+    }
+    if (reviewer.role.roleName !== "Reviewer") {
+      return res.status(403).send({
+        message: "Only users with Reviewer role can review this capa.",
+      });
+    }
+    if (capa.status !== "Under Department Head Review") {
+      return res.status(400).send({
+        message: "Only capa under department head review can be reviewed.",
+      });
+    }
+    let newStatus;
+    if (action === "Approved") newStatus = "Approved By Department Head";
+    else if (action === "Rejected") newStatus = "Draft";
+    else
+      return res.status(400).send({
+        message: "Invalid action — use 'Approved' or 'Rejected'.",
+      });
+    capa.status = newStatus;
+    capa.reviewedBy = reviewer._id;
+    capa.reviewedAt = new Date();
+    capa.reviewComments = reviewComments;
+    await capa.save();
+    return res.status(200).send({
+      message: `Capa ${action.toLowerCase()} successfully.`,
+      success: true,
+      capa,
+    });
+  } catch (error) {
+    console.error("Error reviewing capa:", error);
+    return res.status(500).send({
+      message: "Error reviewing capa",
+      error: error.message,
+    });
+  }
+};
+
+export const qaReviewCapa = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, qaComments } = req.body;
+    const capa = await CAPA.findById(id);
+    if (!capa) return res.status(404).json({ message: "capa not found" });
+    if (capa.status !== "Approved By Department Head") {
+      return res.status(400).json({
+        message: "Only capa approved by Department Head can be reviewed by QA",
+      });
+    }
+    if (!["Approved", "Rejected"].includes(action)) {
+      return res.status(400).json({
+        message: "Invalid action. Must be 'Accepted' or 'Rejected'",
+      });
+    }
+    if (action === "Approved") {
+      capa.status = "Accepted By QA";
+      capa.qaReviewer = req.user._id;
+      capa.qaReviewedAt = new Date();
+      capa.qaComments = qaComments || null;
+    } else if (action === "Rejected") {
+      capa.status = "Draft";
+      capa.qaReviewer = req.user._id;
+      capa.qaReviewedAt = new Date();
+      capa.qaComments = qaComments || "Rejected by QA";
+    }
+    await capa.save();
+    res.status(200).json({
+      success: true,
+      message:
+        action === "Accepted"
+          ? "capa accepted by QA successfully."
+          : "capa rejected by QA.",
+      capa,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error reviewing capa by QA",
       error: error.message,
     });
   }
