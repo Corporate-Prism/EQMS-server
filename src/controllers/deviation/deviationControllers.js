@@ -512,3 +512,98 @@ export const recordCapaDecision = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const updateImmediateActionStatus = async (req, res) => {
+  try {
+    const { deviationId, actionId } = req.params;
+    const userId = req.user._id;
+    const deviation = await Deviation.findById(deviationId);
+    if (!deviation) return res.status(404).json({ success: false, message: "Deviation not found" });
+    const action = deviation.immediateActions.id(actionId);
+    if (!action) return res.status(404).json({ success: false, message: "Action not found" });
+    if (action.assignedTo.toString() !== userId.toString()) return res.status(404).json({ success: false, message: "You are not authorized to complete this action" });
+    action.status = "Completed";
+    action.completedAt = new Date();
+    const allCompleted = deviation.immediateActions.every(
+      (a) => a.status === "Completed"
+    );
+    if (allCompleted) {
+      deviation.status = "Acknowledged By Team";
+    }
+    await deviation.save();
+    res.status(200).json({
+      success: true,
+      message: "Immediate action marked as completed successfully",
+      data: action,
+    });
+  } catch (error) {
+    console.error("Error updating immediate action status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating immediate action status",
+      error: error.message,
+    });
+  }
+}
+
+export const updateDeviationStatus = async (req, res) => {
+  try {
+    const { deviationId } = req.params;
+    const userId = req.user._id;
+    const userRole = req.user.role;
+    const userDept = req.user.department;
+    const deviation = await Deviation.findById(deviationId).populate("department");
+    if (!deviation)
+      return res.status(404).json({ success: false, message: "Deviation not found" });
+    let currentStatus = deviation.status;
+    let deviationDept = deviation.department.departmentName;
+    let newStatus = null;
+    if (
+      (currentStatus === "Capa Initiated" || currentStatus === "Acknowledged By Team") &&
+      userRole.roleName === "Approver" &&
+      userDept.departmentName === "QA"
+    ) {
+      newStatus = "Acknowledged By Approver 1";
+    }
+
+    else if (
+      currentStatus === "Acknowledged By Approver 1" &&
+      userRole.roleName === "Approver 2" &&
+      userDept.departmentName === "QA"
+    ) {
+      newStatus = "Acknowledged By Approver 2";
+    }
+
+    else if (
+      currentStatus === "Acknowledged By Approver 2" &&
+      userRole.roleName === "Approver" &&
+      userDept.departmentName === deviationDept
+    ) {
+      newStatus = "Deviation Closed";
+    }
+
+    if (!newStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "You are not allowed to update the status for this deviation",
+      });
+    }
+
+    deviation.status = newStatus;
+    await deviation.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Deviation status updated to "${newStatus}"`,
+      data: deviation,
+    });
+
+  } catch (error) {
+    console.error("Error updating deviation status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating deviation status",
+      error: error.message,
+    });
+  }
+};
