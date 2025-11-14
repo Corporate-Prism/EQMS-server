@@ -559,7 +559,7 @@ export const updateDeviationStatus = async (req, res) => {
     let deviationDept = deviation.department.departmentName;
     let newStatus = null;
     if (
-      (currentStatus === "Capa Initiated" || currentStatus === "Acknowledged By Team") &&
+      (currentStatus === "CAPA Initiated" || currentStatus === "Acknowledged By Team") &&
       userRole.roleName === "Approver" &&
       userDept.departmentName === "QA"
     ) {
