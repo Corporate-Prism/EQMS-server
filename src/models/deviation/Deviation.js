@@ -29,7 +29,7 @@ const DeviationSchema = new mongoose.Schema(
                 "Acknowledged By Team",
                 "Acknowledged By Approver 1",
                 "Acknowledged By Approver 2",
-                "Closed"
+                "Deviation Closed"
             ],
             default: "Draft",
         },

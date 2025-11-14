@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaDecision, reviewDeviation, submitDeviationForReview } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaDecision, reviewDeviation, submitDeviationForReview, updateDeviationStatus, updateImmediateActionStatus } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -486,52 +486,138 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
 
 /**
  * @swagger
- * /api/v1/deviations/immediate-actions/status:
+ * /api/v1/deviations/{deviationId}/immediate-actions/{actionId}/complete:
  *   patch:
- *     summary: Update status of an immediate action
- *     description: Allows assigned users to update the status of an immediate corrective/preventive action. When all actions are marked as Completed, the deviation status is updated to "Reviewed By Team".
+ *     summary: Mark an immediate action as completed
+ *     description: Allows only the assigned user to mark their immediate action as **Completed**. When all actions for a deviation are completed, the deviation status is updated automatically.
  *     tags: [Deviations]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - deviationId
- *               - actionIndex
- *               - status
- *             properties:
- *               deviationId:
- *                 type: string
- *                 description: ID of the deviation.
- *                 example: "67204e72b62e5a001e3c5a29"
- *               actionIndex:
- *                 type: integer
- *                 description: Index of the immediate action to update.
- *                 example: 0
- *               status:
- *                 type: string
- *                 enum: [Pending, Completed]
- *                 description: New status of the action.
- *                 example: "Completed"
+ *     parameters:
+ *       - in: path
+ *         name: deviationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the deviation document.
+ *         example: "67204e72b62e5a001e3c5a29"
+ *       - in: path
+ *         name: actionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the immediate action to be updated.
+ *         example: "67204e72b62e5a001e3c5a30"
  *     responses:
  *       200:
- *         description: Immediate action status updated successfully.
+ *         description: Immediate action marked as completed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Immediate action marked as completed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "67204e72b62e5a001e3c5a30"
+ *                     title:
+ *                       type: string
+ *                       example: "Check temperature logs"
+ *                     status:
+ *                       type: string
+ *                       example: "Completed"
+ *                     completedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized — Missing or invalid token.
+ *       403:
+ *         description: Forbidden — User not authorized to complete this action.
+ *       404:
+ *         description: Deviation or action not found.
+ *       500:
+ *         description: Server error while updating immediate action.
+ */
+router.patch(
+  "/:deviationId/immediate-actions/:actionId/complete",
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
+  updateImmediateActionStatus
+);
+
+/**
+ * @swagger
+ * /api/v1/deviations/{deviationId}/update-status:
+ *   patch:
+ *     summary: Update the status of a deviation based on role and current workflow stage
+ *     description: >
+ *       Updates the deviation status according to the deviation workflow rules:
+ *       - **Approver (QA Department)** can update:
+ *         - "Capa Initiated" → "Acknowledged By Approver 1"
+ *         - "Acknowledged By Team" → "Acknowledged By Approver 1"
+ *       - **Approver 2 (QA Department)** can update:
+ *         - "Acknowledged By Approver 1" → "Acknowledged By Approver 2"
+ *       - **Approver (of deviation's department)** can update:
+ *         - "Acknowledged By Approver 2" → "Deviation Closed"
+ *       <br><br>
+ *       All updates are permission-based and validated against role and department.
+ *     tags: [Deviations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: deviationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the deviation whose status needs to be updated.
+ *         example: "67204e72b62e5a001e3c5a29"
+ *     responses:
+ *       200:
+ *         description: Deviation status updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Deviation status updated to 'Acknowledged By Approver 1'"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "67204e72b62e5a001e3c5a29"
+ *                     status:
+ *                       type: string
+ *                       example: "Acknowledged By Approver 1"
+ *                     department:
+ *                       type: string
+ *                       example: "QA"
  *       400:
- *         description: Invalid input or missing fields.
+ *         description: User not allowed to perform this status update.
+ *       401:
+ *         description: Unauthorized — Missing or invalid authentication token.
  *       404:
  *         description: Deviation not found.
  *       500:
- *         description: Server error.
+ *         description: Server error while updating deviation status.
  */
 router.patch(
-  "/immediate-actions/status",
-  authAndAuthorize("System Admin","Creator", "Reviewer", "Approver"),
-  // updateImmediateActionStatus
+  "/:deviationId/update-status",
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
+  updateDeviationStatus
 );
-
 
 export default router;
