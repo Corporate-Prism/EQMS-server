@@ -80,7 +80,7 @@ router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approve
  *       500:
  *         description: Server error
  */
-router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"), getDeviationsSummary)
+router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"), getDeviationsSummary)
 
 /**
  * @swagger
@@ -157,7 +157,7 @@ router.get("/summary", authAndAuthorize("System Admin", "Creator", "Reviewer", "
 
 router.get(
   "/:id",
-  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
   getDeviationById
 );
 
@@ -548,7 +548,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  */
 router.patch(
   "/:deviationId/immediate-actions/:actionId/complete",
-  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
   updateImmediateActionStatus
 );
 
