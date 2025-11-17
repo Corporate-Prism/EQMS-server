@@ -24,7 +24,8 @@ const CAPASchema = new mongoose.Schema(
         "Under Department Head Review",
         "Approved By Department Head",
         "Accepted By QA",
-        "Investigation Team Assigned"
+        "Investigation Team Assigned",
+        "Root Cause Analysis Done"
       ],
       default: "Draft"
     },
@@ -91,6 +92,11 @@ const CAPASchema = new mongoose.Schema(
     investigationAssignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auth",
+    },
+    rootCauseAnalysis: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DeviationImpact",
+      default: null,
     },
   },
   { timestamps: true }
