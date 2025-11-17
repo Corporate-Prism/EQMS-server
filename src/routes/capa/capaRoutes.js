@@ -1,5 +1,5 @@
 import express from "express";
-import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, qaReviewCapa, reviewCapa, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
+import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, qaReviewCapa, recordTeamInvestigation, reviewCapa, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
 
@@ -374,5 +374,55 @@ router.put("/:id/review", authAndAuthorize("Reviewer"), reviewCapa);
  *         description: Internal server error
  */
 router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewCapa);
+
+/**
+ * @swagger
+ * /api/v1/capa/team-investigation:
+ *   post:
+ *     summary: Record Team Investigation for CAPA
+ *     description: Allows investigation team members to record corrective and preventive actions after RCA is completed.
+ *     tags: [CAPA Investigation]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - capaId
+ *             properties:
+ *               capaId:
+ *                 type: string
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               correctiveMeasures:
+ *                 type: string
+ *                 example: "Check equipment calibration records"
+ *               correctiveActions:
+ *                 type: string
+ *                 example: "Replace damaged filter"
+ *               preventiveActions:
+ *                 type: string
+ *                 example: "Update maintenance SOP"
+ *     responses:
+ *       200:
+ *         description: Team investigation recorded successfully.
+ *       400:
+ *         description: Invalid status or missing data.
+ *       403:
+ *         description: Unauthorized user.
+ *       404:
+ *         description: CAPA or investigation team not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post(
+    "/team-investigation",
+    authAndAuthorize("Creator", "Investigator"),
+    recordTeamInvestigation
+  );
+  
+
 
 export default router;

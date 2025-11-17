@@ -5,6 +5,7 @@ import Attachments from "../../models/deviation/Attachments.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import fs from "fs";
 import Auth from "../../models/Auth.js";
+import CapaInvestigationTeam from "../../models/capa/CapaInvestigationTeam.js";
 
 export const createCAPA = async (req, res) => {
   const session = await mongoose.startSession();
@@ -308,3 +309,59 @@ export const qaReviewCapa = async (req, res) => {
     });
   }
 };
+
+export const recordTeamInvestigation = async (req, res) => {
+  try {
+    const { capaId, correctiveMeasures, correctiveActions, preventiveActions } = req.body;
+    const userId = req.user._id;
+
+    if (!capaId)
+      return res.status(400).json({ success: false, message: "capaId is required" });
+
+    const capa = await CAPA.findById(capaId);
+    if (!capa)
+      return res.status(404).json({ success: false, message: "CAPA not found" });
+
+    if (capa.status !== "Root Cause Analysis Done")
+      return res.status(400).json({
+        success: false,
+        message: "Team investigation can only be done after root cause analysis.",
+      });
+
+    const team = await CapaInvestigationTeam.findById(capa.investigationTeam);
+    if (!team)
+      return res.status(404).json({ success: false, message: "Investigation team not found." });
+
+    const isMember = team.members.some(
+      (m) => m.user.toString() === userId.toString()
+    );
+
+    if (!isMember)
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to record investigation for this CAPA.",
+      });
+
+    capa.teamCorrectiveMeasures = correctiveMeasures || "";
+    capa.teamCorrectiveActions = correctiveActions || "";
+    capa.teamPreventiveActions = preventiveActions || "";
+    capa.status = "Team Investigation Done";
+
+    await capa.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Team investigation recorded successfully.",
+      data: capa,
+    });
+
+  } catch (error) {
+    console.error("Error recording team investigation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while recording team investigation.",
+      error: error.message,
+    });
+  }
+};
+

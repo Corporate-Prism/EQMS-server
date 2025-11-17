@@ -25,7 +25,8 @@ const CAPASchema = new mongoose.Schema(
         "Approved By Department Head",
         "Accepted By QA",
         "Investigation Team Assigned",
-        "Root Cause Analysis Done"
+        "Root Cause Analysis Done",
+        "Team Investigation Done"
       ],
       default: "Draft"
     },
@@ -98,6 +99,18 @@ const CAPASchema = new mongoose.Schema(
       ref: "DeviationImpact",
       default: null,
     },
+    teamCorrectiveMeasures: {
+      type: String,
+      trim: true,
+    },
+    teamCorrectiveActions: {
+      type: String,
+      trim: true,
+    },
+    teamPreventiveActions: {
+      type: String,
+      trim: true,
+    }
   },
   { timestamps: true }
 );
