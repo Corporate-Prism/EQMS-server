@@ -1,6 +1,9 @@
+import CAPA from "../../models/capa/Capa.js";
 import Deviation from "../../models/deviation/Deviation.js";
 import DeviationImpact from "../../models/deviation/DeviationImpact.js";
 import InvestigationTeam from "../../models/deviation/InvestigationTeam.js";
+import CapaInvestigationTeam from "../../models/capa/CapaInvestigationTeam.js";
+import CapaImpact from "../../models/capa/CapaImpact.js";
 
 
 export const createInvestigationTeam = async (req, res) => {
@@ -181,47 +184,104 @@ export const recordTeamImpact = async (req, res) => {
 
 export const recordRootCauseAnalysis = async (req, res) => {
   try {
-    const { deviationId, answers } = req.body;
+    const { type, targetId, answers } = req.body;
     const userId = req.user._id;
-    if (!deviationId || !answers || !Array.isArray(answers) || answers.length === 0) {
+
+    if (!type || !["deviation", "capa"].includes(type))
+      return res.status(400).json({ success: false, message: "Invalid type. Must be 'deviation' or 'capa'." });
+
+    if (!targetId || !answers || !Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "deviationId and non-empty answers array are required.",
+        message: "targetId and non-empty answers array are required.",
       });
     }
-    const deviation = await Deviation.findById(deviationId).populate("investigationTeam");
-    if (!deviation)
-      return res.status(404).json({ success: false, message: "Deviation not found." });
-    if (deviation.status !== "Team Impact Assessment Done") {
-      return res.status(400).json({
-        success: false,
-        message: "Root Cause Analysis can only be recorded after team impact assessment is done.",
+
+    let targetDoc;
+    let team;
+    let allowed = false;
+    let newRCA;
+
+    if (type === "deviation") {
+      targetDoc = await Deviation.findById(targetId).populate("investigationTeam");
+      if (!targetDoc)
+        return res.status(404).json({ success: false, message: "Deviation not found." });
+
+      if (targetDoc.status !== "Team Impact Assessment Done") {
+        return res.status(400).json({
+          success: false,
+          message: "RCA can only be recorded after team impact assessment is completed.",
+        });
+      }
+
+      team = await InvestigationTeam.findById(targetDoc.investigationTeam);
+      if (!team)
+        return res.status(404).json({ success: false, message: "Investigation team not found." });
+
+      allowed = team.members.some((m) => m.user.toString() === userId.toString());
+      if (!allowed)
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to record RCA for this deviation.",
+        });
+
+      newRCA = new DeviationImpact({
+        deviationId: targetId,
+        answers,
+        createdBy: userId,
       });
+
+      await newRCA.save();
     }
-    const team = await InvestigationTeam.findById(deviation.investigationTeam);
-    if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
-    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to record root cause analysis for this deviation.",
+
+    else if (type === "capa") {
+      targetDoc = await CAPA.findById(targetId);
+      if (!targetDoc)
+        return res.status(404).json({ success: false, message: "CAPA not found." });
+
+      if (targetDoc.status !== "Investigation Team Assigned") {
+        return res.status(400).json({
+          success: false,
+          message: "RCA can only be recorded when investigation team is assigned.",
+        });
+      }
+
+      team = await CapaInvestigationTeam.findById(targetDoc.investigationTeam);
+      if (!team)
+        return res.status(404).json({ success: false, message: "Investigation team not found." });
+
+      allowed = team.members.some((m) => m.user.toString() === userId.toString());
+      if (!allowed)
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to record RCA for this capa.",
+        });
+
+      newRCA = new CapaImpact({
+        capaId: targetId,
+        answers,
+        createdBy: userId,
       });
+
+      await newRCA.save();
     }
-    const newRCA = new DeviationImpact({
-      deviationId,
-      answers,
-    });
-    await newRCA.save();
-    deviation.rootCauseAnalysis = newRCA._id;
-    deviation.status = "Root Cause Analysis Done";
-    await deviation.save();
+
+    if (type === "deviation") {
+      targetDoc.rootCauseAnalysis = newRCA._id;
+      targetDoc.status = "Root Cause Analysis Done";
+    } else {
+      targetDoc.rootCauseAnalysis = newRCA._id;
+      targetDoc.status = "Root Cause Analysis Done";
+    }
+    await targetDoc.save();
     res.status(201).json({
       success: true,
-      message: "Root cause analysis recorded successfully.",
+      message: `${type.toUpperCase()} RCA recorded successfully.`,
       rootCauseAnalysis: newRCA,
     });
+
   } catch (error) {
-    console.error("Error recording root cause analysis:", error);
+    console.error("Error recording RCA:", error);
     res.status(500).json({
       success: false,
       message: "Server error while recording root cause analysis.",

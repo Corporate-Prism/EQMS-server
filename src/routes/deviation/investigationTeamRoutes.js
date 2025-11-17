@@ -337,8 +337,10 @@ router.post("/impact-assessment", authAndAuthorize("Creator"), recordTeamImpact)
  * @swagger
  * /api/v1/investigation-teams/root-cause-analysis:
  *   post:
- *     summary: Record Root Cause Analysis by Investigation Team
- *     description: Allows members of the assigned investigation team to record the root cause analysis for a deviation after team impact assessment is done.
+ *     summary: Record Root Cause Analysis (RCA) for Deviation or CAPA
+ *     description: 
+ *       Allows an investigation team member (for deviations) or the assigned CAPA owner (for CAPA) to record root cause analysis.  
+ *       The workflow and authorization behavior changes automatically depending on whether the RCA is being recorded for a **Deviation** or a **CAPA**.
  *     tags: [Investigation Teams]
  *     security:
  *       - bearerAuth: []
@@ -349,45 +351,60 @@ router.post("/impact-assessment", authAndAuthorize("Creator"), recordTeamImpact)
  *           schema:
  *             type: object
  *             required:
- *               - deviationId
+ *               - type
+ *               - targetId
  *               - answers
  *             properties:
- *               deviationId:
+ *               type:
  *                 type: string
- *                 description: The ID of the deviation for which the team is recording the root cause analysis.
+ *                 enum: [deviation, capa]
+ *                 description: Indicates whether RCA is for a Deviation or a CAPA.
+ *                 example: "deviation"
+ *
+ *               targetId:
+ *                 type: string
+ *                 description: 
+ *                   If type = "deviation", provide deviationId.  
+ *                   If type = "capa", provide capaId.
  *                 example: "67204e72b62e5a001e3c5a29"
+ *
  *               answers:
  *                 type: array
- *                 description: A list of question-answer pairs for the root cause analysis.
+ *                 description: A list of question-answer pairs for root cause analysis.
  *                 items:
  *                   type: object
  *                   properties:
  *                     questionId:
  *                       type: string
- *                       description: ID of the root cause analysis question.
+ *                       description: RCA question ID.
  *                       example: "67124f9c1234567890abcd12"
  *                     answer:
  *                       type: string
- *                       description: Answer provided by the team.
- *                       example: "Root cause identified as equipment malfunction."
+ *                       description: The answer to the question.
+ *                       example: "Equipment malfunction caused the deviation."
  *                     comment:
  *                       type: string
- *                       description: Optional additional comments.
- *                       example: "Preventive maintenance schedule to be updated."
+ *                       description: Optional comments.
+ *                       example: "Technician training required."
+ *
  *     responses:
  *       201:
- *         description: Root cause analysis recorded successfully.
+ *         description: Root Cause Analysis recorded successfully.
  *       400:
- *         description: Invalid status or missing fields.
+ *         description: Invalid data or workflow conditions not met.
  *       403:
- *         description: User not authorized.
+ *         description: User not authorized to record RCA.
  *       404:
- *         description: Deviation or team not found.
+ *         description: Deviation, CAPA, or investigation team not found.
  *       500:
- *         description: Server error.
+ *         description: Server error while recording root cause analysis.
  */
-router.post("/root-cause-analysis", authAndAuthorize("Creator"), recordRootCauseAnalysis);
-
+router.post(
+    "/root-cause-analysis",
+    authAndAuthorize("Creator", "Reviewer", "Approver"),
+    recordRootCauseAnalysis
+  );
+  
 /**
  * @swagger
  * /api/v1/investigation-teams/historical-check:
