@@ -1,5 +1,5 @@
 import express from "express";
-import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, qaReviewCapa, recordTeamInvestigation, reviewCapa, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
+import { createCAPA, getAllCAPA, getCAPAById, getCAPASummary, qaReviewCapa, recordChangeControlDecision, recordTeamInvestigation, reviewCapa, submitCapaForReview } from "../../controllers/capa/capaControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
 
@@ -381,7 +381,7 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewCapa);
  *   post:
  *     summary: Record Team Investigation for CAPA
  *     description: Allows investigation team members to record corrective and preventive actions after RCA is completed.
- *     tags: [CAPA Investigation]
+ *     tags: [CAPA]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -423,6 +423,132 @@ router.post(
     recordTeamInvestigation
   );
   
+/**
+ * @swagger
+ * /api/v1/capa/change-control-decision:
+ *   post:
+ *     summary: Record Change Control decision for a CAPA
+ *     description: |
+ *       Records the Change Control decision for a given CAPA.  
+ *       - If Change Control is **not required**, a justification and immediate actions are recorded.  
+ *       - If Change Control **is required**, a Change Control record is created and linked to the CAPA.
+ *     tags:
+ *       - CAPA
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - capaId
+ *               - changeControlRequired
+ *             properties:
+ *               capaId:
+ *                 type: string
+ *                 description: ID of the CAPA
+ *                 example: "6747be62fe1e2f218a9a0e64"
+ *               changeControlRequired:
+ *                 type: boolean
+ *                 description: Whether Change Control is required
+ *                 example: true
+ *               justification:
+ *                 type: string
+ *                 description: Justification when Change Control is not required
+ *                 example: "Root cause does not impact product quality."
+ *               immediateActions:
+ *                 type: array
+ *                 description: Immediate corrective/preventive actions (only when Change Control is not required)
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                       example: "Stop processing affected material"
+ *                     assignedTo:
+ *                       type: string
+ *                       example: "6746ef12abf4baaa9a7f3423"
+ *                     status:
+ *                       type: string
+ *                       example: "Pending"
+ *                     completedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *     responses:
+ *       201:
+ *         description: Change Control decision recorded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Change control created and linked to CAPA successfully."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "6750f253f2452a6e09cd3a12"
+ *                     capa:
+ *                       type: string
+ *                       example: "6747be62fe1e2f218a9a0e64"
+ *                     createdBy:
+ *                       type: string
+ *                       example: "671d5fe3b8d71e77af9b3c42"
+ *       400:
+ *         description: Bad Request (Missing or invalid fields)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Justification is required when Change Control is not required."
+ *       404:
+ *         description: CAPA not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "CAPA not found."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error recording Change Control decision: Something went wrong."
+ */
+
+router.post(
+  "/change-control-decision",
+  authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin"),
+  recordChangeControlDecision
+);
 
 
 export default router;

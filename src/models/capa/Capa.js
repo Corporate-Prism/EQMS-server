@@ -26,7 +26,13 @@ const CAPASchema = new mongoose.Schema(
         "Accepted By QA",
         "Investigation Team Assigned",
         "Root Cause Analysis Done",
-        "Team Investigation Done"
+        "Team Investigation Done",
+        "Immediate Actions In Progess",
+        "Change Control Inititated",
+        "Acknowledged By Team",
+        "Acknowledged By Approver 1",
+        "Acknowledged By Approver 2",
+        "CAPA Closed"
       ],
       default: "Draft"
     },
@@ -110,8 +116,35 @@ const CAPASchema = new mongoose.Schema(
     teamPreventiveActions: {
       type: String,
       trim: true,
+    },
+    changeControlJustification: {
+      type: String,
+      trim: true,
+    },
+    immediateActions: [
+      {
+        title: { type: String, required: true },
+        assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+        status: {
+          type: String,
+          enum: ["Pending", "Completed"],
+          default: "Pending",
+        },
+        completedAt: { type: Date },
+      },
+    ],
+    changeControlRequired: { type: Boolean },
+    changeControlJustification: { type: String },
+    changeControlDecisionBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
+    },
+    changeControlReference: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ChangeControl",
     }
   },
+
   { timestamps: true }
 );
 
