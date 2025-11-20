@@ -28,8 +28,8 @@ const CAPASchema = new mongoose.Schema(
         "Root Cause Analysis Done",
         "Team Investigation Done",
         "Immediate Actions In Progress",
+        "Immediate Actions Completed",
         "Change Control Initiated",
-        "Acknowledged By Team",
         "Acknowledged By Approver 1",
         "Acknowledged By Approver 2",
         "CAPA Closed"
@@ -130,7 +130,7 @@ const CAPASchema = new mongoose.Schema(
           enum: ["Pending", "Completed"],
           default: "Pending",
         },
-        completedAt: { type: Date },
+        completedAt: { type: Date, default: Date.now },
       },
     ],
     changeControlRequired: { type: Boolean },
