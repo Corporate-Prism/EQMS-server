@@ -80,13 +80,13 @@ const router = express.Router();
  *         description: Server error
  */
 router.post(
-    "/",
-    authAndAuthorize("Creator"),
-    upload.fields([
-        { name: "relatedRecordsAttachments", maxCount: 10 },
-        { name: "supportingDocuments", maxCount: 10 },
-    ]),
-    createCAPA
+  "/",
+  authAndAuthorize("Creator"),
+  upload.fields([
+    { name: "relatedRecordsAttachments", maxCount: 10 },
+    { name: "supportingDocuments", maxCount: 10 },
+  ]),
+  createCAPA
 );
 
 /**
@@ -137,9 +137,9 @@ router.get("/", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admi
  *         description: Server error
  */
 router.get(
-    "/summary",
-    authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver"),
-    getCAPASummary
+  "/summary",
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
+  getCAPASummary
 );
 
 /**
@@ -169,7 +169,7 @@ router.get(
  *       500:
  *         description: Server error
  */
-router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin"), getCAPAById)
+router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin", "Approver 2"), getCAPAById)
 
 /**
  * @swagger
@@ -418,11 +418,11 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewCapa);
  *         description: Server error.
  */
 router.post(
-    "/team-investigation",
-    authAndAuthorize("Creator", "Investigator"),
-    recordTeamInvestigation
-  );
-  
+  "/team-investigation",
+  authAndAuthorize("Creator"),
+  recordTeamInvestigation
+);
+
 /**
  * @swagger
  * /api/v1/capa/change-control-decision:
