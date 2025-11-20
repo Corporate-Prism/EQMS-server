@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaDecision, reviewDeviation, submitDeviationForReview, updateDeviationStatus, updateImmediateActionStatus } from "../../controllers/deviation/deviationControllers.js";
+import { createDeviation, getDeviationById, getDeviations, getDeviationsSummary, qaReviewDeviation, recordCapaDecision, reviewDeviation, submitDeviationForReview, updateImmediateActionStatusCombined, updateStatus } from "../../controllers/deviation/deviationControllers.js";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -486,21 +486,34 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
 
 /**
  * @swagger
- * /api/v1/deviations/{deviationId}/immediate-actions/{actionId}/complete:
+ * /api/v1/deviations/complete/{type}/{parentId}/{actionId}:
  *   patch:
- *     summary: Mark an immediate action as completed
- *     description: Allows only the assigned user to mark their immediate action as **Completed**. When all actions for a deviation are completed, the deviation status is updated automatically.
+ *     summary: Mark an immediate action as completed (Deviation or CAPA)
+ *     description: 
+ *       Allows only the assigned user to mark their immediate action as **Completed**. 
+ *       This API works for both **Deviations** and **CAPA** based on the `type` parameter. 
+ *       When all actions are completed, the parent document status is also updated automatically.
  *     tags: [Deviations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: deviationId
+ *         name: type
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the deviation document.
+ *           enum: [deviation, capa]
+ *         description: Specifies whether the action belongs to a Deviation or CAPA.
+ *         example: "deviation"
+ *
+ *       - in: path
+ *         name: parentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Deviation or CAPA document.
  *         example: "67204e72b62e5a001e3c5a29"
+ *
  *       - in: path
  *         name: actionId
  *         required: true
@@ -508,6 +521,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  *           type: string
  *         description: ID of the immediate action to be updated.
  *         example: "67204e72b62e5a001e3c5a30"
+ *
  *     responses:
  *       200:
  *         description: Immediate action marked as completed successfully.
@@ -521,7 +535,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Immediate action marked as completed successfully"
+ *                   example: "Immediate action completed successfully"
  *                 data:
  *                   type: object
  *                   properties:
@@ -534,54 +548,78 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  *                     status:
  *                       type: string
  *                       example: "Completed"
- *                     completedAt:
- *                       type: string
- *                       format: date-time
+
+ *
+ *       400:
+ *         description: Invalid type (must be deviation or capa).
+ *
  *       401:
  *         description: Unauthorized — Missing or invalid token.
+ *
  *       403:
  *         description: Forbidden — User not authorized to complete this action.
+ *
  *       404:
- *         description: Deviation or action not found.
+ *         description: Parent document or action not found.
+ *
  *       500:
  *         description: Server error while updating immediate action.
  */
 router.patch(
-  "/:deviationId/immediate-actions/:actionId/complete",
+  "/complete/:type/:parentId/:actionId",
   authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
-  updateImmediateActionStatus
+  updateImmediateActionStatusCombined
 );
 
 /**
  * @swagger
- * /api/v1/deviations/{deviationId}/update-status:
+ * /api/v1/deviations/update-status/{type}/{id}:
  *   patch:
- *     summary: Update the status of a deviation based on role and current workflow stage
+ *     summary: Update the status of a Deviation or CAPA based on workflow rules and user roles
  *     description: >
- *       Updates the deviation status according to the deviation workflow rules:
- *       - **Approver (QA Department)** can update:
- *         - "Capa Initiated" → "Acknowledged By Approver 1"
- *         - "Acknowledged By Team" → "Acknowledged By Approver 1"
- *       - **Approver 2 (QA Department)** can update:
- *         - "Acknowledged By Approver 1" → "Acknowledged By Approver 2"
- *       - **Approver (of deviation's department)** can update:
- *         - "Acknowledged By Approver 2" → "Deviation Closed"
+ *       This API updates the status of **Deviation** or **CAPA** documents depending on:
+ *       - Current workflow stage  
+ *       - Role of the user  
+ *       - User department  
  *       <br><br>
- *       All updates are permission-based and validated against role and department.
+ *       ### Status update rules:
+ *
+ *       #### **Approver (QA Department)** can change:
+ *       - "CAPA Initiated" → "Acknowledged By Approver 1"
+ *       - "Acknowledged By Team" → "Acknowledged By Approver 1"
+ *       - "Change Control Initiated" → "Acknowledged By Approver 1"
+ *       - "Immediate Actions Completed" → "Acknowledged By Approver 1"
+ *       
+ *       #### **Approver 2 (QA Department)** can change:
+ *       - "Acknowledged By Approver 1" → "Acknowledged By Approver 2"
+ *
+ *       #### **Approver (of the document's department)** can change:
+ *       - For Deviation: "Acknowledged By Approver 2" → "Deviation Closed"
+ *       - For CAPA: "Acknowledged By Approver 2" → "CAPA Closed"
+ *
+ *       All updates are permission-based and validated against the user's role & department.
  *     tags: [Deviations]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: deviationId
+ *         name: type
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the deviation whose status needs to be updated.
+ *           enum: [deviation, capa]
+ *         description: Document type whose status must be updated.
+ *         example: "deviation"
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the Deviation or CAPA.
  *         example: "67204e72b62e5a001e3c5a29"
  *     responses:
  *       200:
- *         description: Deviation status updated successfully.
+ *         description: Status updated successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -592,7 +630,7 @@ router.patch(
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Deviation status updated to 'Acknowledged By Approver 1'"
+ *                   example: "deviation status updated to 'Acknowledged By Approver 1'"
  *                 data:
  *                   type: object
  *                   properties:
@@ -606,18 +644,18 @@ router.patch(
  *                       type: string
  *                       example: "QA"
  *       400:
- *         description: User not allowed to perform this status update.
+ *         description: Invalid type or user not allowed to update status.
  *       401:
  *         description: Unauthorized — Missing or invalid authentication token.
  *       404:
- *         description: Deviation not found.
+ *         description: Document not found.
  *       500:
- *         description: Server error while updating deviation status.
+ *         description: Server error while updating status.
  */
 router.patch(
-  "/:deviationId/update-status",
+  "/update-status/:type/:id",
   authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
-  updateDeviationStatus
+  updateStatus
 );
 
 export default router;

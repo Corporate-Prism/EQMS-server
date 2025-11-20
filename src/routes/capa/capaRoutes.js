@@ -473,10 +473,7 @@ router.post(
  *                     status:
  *                       type: string
  *                       example: "Pending"
- *                     completedAt:
- *                       type: string
- *                       format: date-time
- *                       nullable: true
+
  *     responses:
  *       201:
  *         description: Change Control decision recorded successfully

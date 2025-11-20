@@ -215,7 +215,7 @@ const DeviationSchema = new mongoose.Schema(
                     enum: ["Pending", "Completed"],
                     default: "Pending",
                 },
-                completedAt: { type: Date },
+                completedAt: { type: Date, default: Date.now },
             },
         ],
         capaRequired: { type: Boolean },

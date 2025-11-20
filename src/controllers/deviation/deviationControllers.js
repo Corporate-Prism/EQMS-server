@@ -513,27 +513,51 @@ export const recordCapaDecision = async (req, res) => {
   }
 };
 
-export const updateImmediateActionStatus = async (req, res) => {
+export const updateImmediateActionStatusCombined = async (req, res) => {
   try {
-    const { deviationId, actionId } = req.params;
+    const { type, parentId, actionId } = req.params;
     const userId = req.user._id;
-    const deviation = await Deviation.findById(deviationId);
-    if (!deviation) return res.status(404).json({ success: false, message: "Deviation not found" });
-    const action = deviation.immediateActions.id(actionId);
-    if (!action) return res.status(404).json({ success: false, message: "Action not found" });
-    if (action.assignedTo.toString() !== userId.toString()) return res.status(404).json({ success: false, message: "You are not authorized to complete this action" });
+    let Model;
+    if (type === "deviation") Model = Deviation;
+    else if (type === "capa") Model = CAPA;
+    else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid type. Use 'deviation' or 'capa'.",
+      });
+    }
+    const record = await Model.findById(parentId);
+    if (!record)
+      return res.status(404).json({
+        success: false,
+        message: `${type} not found`,
+      });
+    const action = record.immediateActions.id(actionId);
+    if (!action)
+      return res.status(404).json({
+        success: false,
+        message: "Action not found",
+      });
+    if (action.assignedTo.toString() !== userId.toString())
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to complete this action",
+      });
     action.status = "Completed";
     action.completedAt = new Date();
-    const allCompleted = deviation.immediateActions.every(
+    const allCompleted = record.immediateActions.every(
       (a) => a.status === "Completed"
     );
-    if (allCompleted) {
-      deviation.status = "Acknowledged By Team";
+    if (type === "deviation" && allCompleted) {
+      record.status = "Acknowledged By Team";
     }
-    await deviation.save();
+    if (type === "capa" && allCompleted) {
+      record.status = "Immediate Actions Completed";
+    }
+    await record.save();
     res.status(200).json({
       success: true,
-      message: "Immediate action marked as completed successfully",
+      message: "Immediate action completed successfully",
       data: action,
     });
   } catch (error) {
@@ -544,25 +568,38 @@ export const updateImmediateActionStatus = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
-export const updateDeviationStatus = async (req, res) => {
+export const updateStatus = async (req, res) => {
   try {
-    const { deviationId } = req.params;
+    const { type, id } = req.params;
     const userId = req.user._id;
     const userRole = req.user.role;
     const userDept = req.user.department;
-    const deviation = await Deviation.findById(deviationId).populate("department");
-    if (!deviation)
-      return res.status(404).json({ success: false, message: "Deviation not found" });
-    let currentStatus = deviation.status;
-    let deviationDept = deviation.department.departmentName;
+    const Models = {
+      deviation: Deviation,
+      capa: CAPA
+    };
+    const Model = Models[type];
+    if (!Model)
+      return res.status(400).json({ success: false, message: "Invalid document type" });
+
+    const document = await Model.findById(id).populate("department");
+    if (!document)
+      return res.status(404).json({ success: false, message: `${type} not found` });
+
+    let currentStatus = document.status;
+    let deptName = document.department?.departmentName;
     let newStatus = null;
-    if (
-      (currentStatus === "CAPA Initiated" || currentStatus === "Acknowledged By Team") &&
+    const isApprover1Allowed =
+      (currentStatus === "CAPA Initiated" ||
+        currentStatus === "Acknowledged By Team" ||
+        currentStatus === "Change Control Initiated" ||
+        currentStatus === "Immediate Actions Completed") &&
       userRole.roleName === "Approver" &&
-      userDept.departmentName === "QA"
-    ) {
+      userDept.departmentName === "QA";
+
+    if (isApprover1Allowed) {
       newStatus = "Acknowledged By Approver 1";
     }
 
@@ -577,32 +614,32 @@ export const updateDeviationStatus = async (req, res) => {
     else if (
       currentStatus === "Acknowledged By Approver 2" &&
       userRole.roleName === "Approver" &&
-      userDept.departmentName === deviationDept
+      userDept.departmentName === deptName
     ) {
-      newStatus = "Deviation Closed";
+      newStatus = type === "deviation" ? "Deviation Closed" : "CAPA Closed";
     }
 
     if (!newStatus) {
       return res.status(400).json({
         success: false,
-        message: "You are not allowed to update the status for this deviation",
+        message: `You are not allowed to update the status for this ${type}`,
       });
     }
 
-    deviation.status = newStatus;
-    await deviation.save();
+    document.status = newStatus;
+    await document.save();
 
     return res.status(200).json({
       success: true,
-      message: `Deviation status updated to "${newStatus}"`,
-      data: deviation,
+      message: `${type} status updated to "${newStatus}"`,
+      data: document,
     });
 
   } catch (error) {
-    console.error("Error updating deviation status:", error);
+    console.error("Error updating status:", error);
     res.status(500).json({
       success: false,
-      message: "Error updating deviation status",
+      message: "Error updating status",
       error: error.message,
     });
   }
