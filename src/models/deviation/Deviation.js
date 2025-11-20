@@ -218,6 +218,17 @@ const DeviationSchema = new mongoose.Schema(
                 completedAt: { type: Date },
             },
         ],
+        capaRequired: { type: Boolean },
+        capaJustification: { type: String },
+        capaDecisionBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Auth",
+        },
+        capaReference: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "CAPA",
+        }
+
     },
     { timestamps: true }
 );

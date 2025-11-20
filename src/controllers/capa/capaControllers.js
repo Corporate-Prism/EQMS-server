@@ -6,6 +6,7 @@ import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import fs from "fs";
 import Auth from "../../models/Auth.js";
 import CapaInvestigationTeam from "../../models/capa/CapaInvestigationTeam.js";
+import ChangeControl from "../../models/change-control/ChangeControl.js";
 
 export const createCAPA = async (req, res) => {
   const session = await mongoose.startSession();
@@ -362,6 +363,63 @@ export const recordTeamInvestigation = async (req, res) => {
       message: "Server error while recording team investigation.",
       error: error.message,
     });
+  }
+};
+
+export const recordChangeControlDecision = async (req, res) => {
+  try {
+    const { capaId, changeControlRequired, justification, immediateActions } = req.body;
+    const userId = req.user._id;
+    if (!capaId || changeControlRequired === undefined) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "capaId and changeControlRequired are required" 
+      });
+    }
+    const capa = await CAPA.findById(capaId);
+    if (!capa) {
+      return res.status(404).json({ success: false, message: "CAPA not found" });
+    }
+    if (capa.status !== "Team Investigation Done") {
+      return res.status(400).json({
+        success: false,
+        message: "Change control decision can be recorded only after team investigation is done."
+      });
+    }
+    capa.changeControlRequired = changeControlRequired;
+    capa.changeControlDecisionBy = userId;
+    if (!changeControlRequired) {
+      if (!justification) {
+        return res.status(400).json({
+          success: false,
+          message: "Justification is required when change control is not required."
+        });
+      }
+      capa.changeControlJustification = justification;
+      capa.immediateActions = Array.isArray(immediateActions) ? immediateActions : [];
+      capa.status = "Immediate Actions In Progress";
+      await capa.save();
+      return res.status(201).json({
+        success: true,
+        message: "Change control not required. Immediate actions recorded successfully.",
+        data: capa,
+      });
+    }
+    const changeControl = await ChangeControl.create({
+      capa: capaId,
+      createdBy: userId,
+    });
+    capa.changeControlReference = changeControl._id;
+    capa.status = "Change Control Initiated";
+    await capa.save();
+    return res.status(201).json({
+      success: true,
+      message: "Change control created and linked to CAPA successfully.",
+      data: changeControl,
+    });
+  } catch (error) {
+    console.error("Error recording change control decision:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
