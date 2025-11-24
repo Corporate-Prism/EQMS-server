@@ -22,6 +22,7 @@ const DeviationSchema = new mongoose.Schema(
                 "Accepted By QA",
                 "Investigation Team Assigned",
                 "Team Impact Assessment Done",
+                "Root Cause Analysis Done",
                 "Historical Check Done",
                 "Immediate Actions In Progress",
                 "CAPA Initiated",
