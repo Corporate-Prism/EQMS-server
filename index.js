@@ -25,6 +25,8 @@ import documentRoutes from "./src/routes/document/documentRoutes.js";
 import investigationTeamRoutes from "./src/routes/deviation/investigationTeamRoutes.js";
 import capaRoutes from "./src/routes/capa/capaRoutes.js";
 import capaInvestigationTeamRoutes from "./src/routes/capa/capaInvestigationTeamRoutes.js";
+import changeControlCategoryRoutes from "./src/routes/changeControl/changeControlCategoryRoutes.js";
+import changeControlRoutes from "./src/routes/changeControl/changeControlRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -82,6 +84,8 @@ app.use("/api/v1/documents", documentRoutes);
 app.use("/api/v1/investigation-teams", investigationTeamRoutes);
 app.use("/api/v1/capa", capaRoutes);
 app.use("/api/v1/capa-investigation-teams", capaInvestigationTeamRoutes);
+app.use("/api/v1/changeCategories", changeControlCategoryRoutes);
+app.use("/api/v1/changeControl", changeControlRoutes);
 
 app.listen(PORT, () => {
   connectDB();
