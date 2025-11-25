@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, qaReviewChangeControl, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, qaReviewChangeControl, recordChangeControlTeamImpact, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -428,5 +428,58 @@ router.put("/:id/review", authAndAuthorize("Reviewer"), reviewChangeControl);
  */
 router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewChangeControl);
 
-
+/**
+ * @swagger
+ * /api/v1/changeControl/impact-assessment:
+ *   post:
+ *     summary: Record Impact Assessment by Investigation Team
+ *     description: Allows members of the assigned investigation team to record their impact assessment for a change control.
+ *     tags: [Change Control]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - changeControlId
+ *               - answers
+ *             properties:
+ *               changeControlId:
+ *                 type: string
+ *                 description: The ID of the change control for which the team is recording the impact assessment.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               answers:
+ *                 type: array
+ *                 description: A list of question-answer pairs for the impact assessment.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     questionId:
+ *                       type: string
+ *                       description: ID of the impact assessment question.
+ *                       example: "67124f9c1234567890abcd12"
+ *                     answer:
+ *                       type: string
+ *                       description: Answer provided by the team.
+ *                       example: "Yes, deviation affects batch integrity."
+ *                     comment:
+ *                       type: string
+ *                       description: Optional additional comments.
+ *                       example: "Further investigation needed."
+ *     responses:
+ *       201:
+ *         description: Team impact assessment recorded successfully.
+ *       400:
+ *         description: Invalid status or missing fields.
+ *       403:
+ *         description: User not authorized.
+ *       404:
+ *         description: change control or team not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/impact-assessment", authAndAuthorize("Creator"), recordChangeControlTeamImpact);
 export default router;
