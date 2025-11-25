@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -133,12 +133,12 @@ const router = express.Router();
  *         description: Server error
  */
 router.post(
-    "/",
-    authAndAuthorize("Creator"),
-    upload.fields([
-        { name: "detailedDescriptionAttachments", maxCount: 20 },
-    ]),
-    createChangeControl
+  "/",
+  authAndAuthorize("Creator"),
+  upload.fields([
+    { name: "detailedDescriptionAttachments", maxCount: 20 },
+  ]),
+  createChangeControl
 );
 
 /**
@@ -223,5 +223,95 @@ router.get(
  *         description: Server error
  */
 router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin", "Approver 2"), getChangeControlById)
+
+/**
+ * @swagger
+ * /api/v1/changeControl/{id}/submit:
+ *   put:
+ *     summary: Submit a change control for review
+ *     tags: [Change Control]
+ *     description: Change the change control status from Draft to Submitted and record who submitted it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: change control ID to submit for review
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               comments:
+ *                 type: string
+ *                 description: Optional comments added during submission
+ *     responses:
+ *       200:
+ *         description: change control submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: change control submitted for review successfully
+ *                 deviation:
+ *                   type: object
+ *                   description: Updated change control details
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1221
+ *                     title:
+ *                       type: string
+ *                       example: Temperature deviation in Room 104
+ *                     status:
+ *                       type: string
+ *                       example: Submitted
+ *                     submittedBy:
+ *                       type: string
+ *                       example: 652c8e3f9e62c77b0a4b1229
+ *                     submittedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-10-31T12:45:23.000Z
+ *       400:
+ *         description: Invalid operation or change control not in Draft state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Only Draft change control can be submitted for review
+ *       404:
+ *         description: change control not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: change control not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error submitting change control
+ */
+router.put("/:id/submit", authAndAuthorize("Creator"), submitChangeControlForReview);
 
 export default router;
