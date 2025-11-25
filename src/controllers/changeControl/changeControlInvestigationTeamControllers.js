@@ -1,33 +1,32 @@
-import CAPA from "../../models/capa/Capa.js";
-import CapaInvestigationTeam from "../../models/capa/CapaInvestigationTeam.js";
+import ChangeControl from "../../models/change-control/ChangeControl.js";
+import ChangeControlInvestigationTeam from "../../models/change-control/ChangeControlInvestigationTeam.js"
 
-export const createCapaInvestigationTeam = async (req, res) => {
+export const createChangeControlInvestigationTeam = async (req, res) => {
     try {
-        const { capaId, members, remarks } = req.body;
+        const { changeControlId, members, remarks } = req.body;
         const user = req.user;
-
-        const capa = await CAPA.findById(capaId);
-        if (!capa) return res.status(404).send({ message: "capa not found" });
-        if (capa.status !== "Accepted By QA") {
+        const changeControl = await ChangeControl.findById(changeControlId);
+        if (!changeControl) return res.status(404).send({ message: "change control not found" });
+        if (changeControl.status !== "Accepted By QA") {
             return res.status(400).send({
                 message: "Investigation team can only be created after QA approval.",
             });
         }
-        const team = new CapaInvestigationTeam({
-            capa: capa._id,
+        const team = new ChangeControlInvestigationTeam({
+            changeControl: changeControl._id,
             members,
             remarks,
             createdBy: user._id,
         });
         await team.save();
-        capa.investigationTeam = team._id;
-        capa.investigationAssignedBy = user._id;
-        capa.status = "Investigation Team Assigned";
-        await capa.save();
+        changeControl.investigationTeam = team._id;
+        changeControl.investigationAssignedBy = user._id;
+        changeControl.status = "Investigation Team Assigned";
+        await changeControl.save();
         return res.status(201).send({
             message: "Investigation team created successfully.",
             success: true,
-            capa,
+            changeControl,
             team,
         });
     } catch (error) {
@@ -36,12 +35,12 @@ export const createCapaInvestigationTeam = async (req, res) => {
     }
 };
 
-export const getAllCapaInvestigationTeams = async (req, res) => {
+export const getAllChangeControlInvestigationTeams = async (req, res) => {
     try {
-        const teams = await CapaInvestigationTeam.find()
+        const teams = await ChangeControlInvestigationTeam.find()
             .populate({
-                path: "capa",
-                select: "capaNumber status",
+                path: "changeControl",
+                select: "changeControlNumber status",
             })
             .populate({
                 path: "members.user",
@@ -56,18 +55,18 @@ export const getAllCapaInvestigationTeams = async (req, res) => {
             teams,
         });
     } catch (error) {
-        console.error("Error fetching capa investigation teams:", error);
-        res.status(500).send({ message: "Error fetching capa investigation teams", error: error.message });
+        console.error("Error fetching change control investigation teams:", error);
+        res.status(500).send({ message: "Error fetching change control investigation teams", error: error.message });
     }
 };
 
-export const getCapaInvestigationTeamById = async (req, res) => {
+export const getChangeControlInvestigationTeamById = async (req, res) => {
     try {
         const { id } = req.params;
-        let team = await CapaInvestigationTeam.findById(id)
+        let team = await ChangeControlInvestigationTeam.findById(id)
             .populate({
-                path: "capa",
-                select: "capaNumber status department",
+                path: "changeControl",
+                select: "changeControlNumber status department",
                 populate: { path: "department", select: "departmentName" },
             })
             .populate({
@@ -77,10 +76,10 @@ export const getCapaInvestigationTeamById = async (req, res) => {
             })
             .populate("createdBy", "name email");
         if (!team) {
-            team = await CapaInvestigationTeam.findOne({ capa: id })
+            team = await ChangeControlInvestigationTeam.findOne({ changeControl: id })
                 .populate({
-                    path: "capa",
-                    select: "capaNumber status department",
+                    path: "changeControl",
+                    select: "changeControlNumber status department",
                     populate: { path: "department", select: "departmentName" },
                 })
                 .populate({
@@ -93,7 +92,7 @@ export const getCapaInvestigationTeamById = async (req, res) => {
         if (!team)
             return res
                 .status(404)
-                .send({ success: false, message: "Investigation team not found for provided ID or capa." });
+                .send({ success: false, message: "Investigation team not found for provided ID or change control." });
 
         res.status(200).send({
             success: true,
@@ -106,11 +105,11 @@ export const getCapaInvestigationTeamById = async (req, res) => {
 };
 
 
-export const updateCapaInvestigationTeam = async (req, res) => {
+export const updateChangeControlInvestigationTeam = async (req, res) => {
     try {
         const { id } = req.params;
         const { remarks, members } = req.body;
-        const team = await CapaInvestigationTeam.findById(id);
+        const team = await ChangeControlInvestigationTeam.findById(id);
         if (!team) return res.status(404).send({ message: "Investigation team not found" });
 
         if (remarks) team.remarks = remarks;
@@ -129,10 +128,10 @@ export const updateCapaInvestigationTeam = async (req, res) => {
     }
 };
 
-export const deleteCapaInvestigationTeam = async (req, res) => {
+export const deleteChangeControlInvestigationTeam = async (req, res) => {
     try {
         const { id } = req.params;
-        const team = await CapaInvestigationTeam.findById(id);
+        const team = await ChangeControlInvestigationTeam.findById(id);
         if (!team) return res.status(404).send({ message: "Investigation team not found" });
 
         await team.deleteOne();
