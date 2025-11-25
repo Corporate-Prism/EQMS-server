@@ -189,7 +189,36 @@ export const createChangeControl = async (req, res) => {
 
 export const getAllChangeControls = async (req, res) => {
     try {
-        const changeControls = await ChangeControl.find();
+        const changeControls = await ChangeControl.find()
+            .populate("item.equipment", "equipmentName equipmentCode")
+            .populate("detailedDescription.attachments")
+            .populate("department", "departmentName")
+            .populate("location", "locationName locationCode")
+            .populate("changeType.type3", "categoryName")
+            .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("reviewedBy", "name")
+            .populate("qaReviewer", "name")
+            .populate("investigationAssignedBy", "name")
+            .populate("historicalCheckedBy", "name")
+            .populate({
+                path: "investigationTeam",
+                populate: {
+                    path: "members.user",
+                    select: "name role",
+                    populate: {
+                        path: "role",
+                        select: "roleName"
+                    }
+                },
+            })
+            .populate({
+                path: "similarChanges",
+                populate: {
+                    path: "changeControl",
+                    select: "changeControlNumber",
+                }
+            })
         return res.status(200).json({
             success: true,
             data: changeControls,
@@ -207,7 +236,36 @@ export const getAllChangeControls = async (req, res) => {
 export const getChangeControlById = async (req, res) => {
     try {
         const { id } = req.params;
-        const changeControl = await ChangeControl.findById(id);
+        const changeControl = await ChangeControl.findById(id)
+            .populate("item.equipment", "equipmentName equipmentCode")
+            .populate("detailedDescription.attachments")
+            .populate("department", "departmentName")
+            .populate("location", "locationName locationCode")
+            .populate("changeType.type3", "categoryName")
+            .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("reviewedBy", "name")
+            .populate("qaReviewer", "name")
+            .populate("investigationAssignedBy", "name")
+            .populate("historicalCheckedBy", "name")
+            .populate({
+                path: "investigationTeam",
+                populate: {
+                    path: "members.user",
+                    select: "name role",
+                    populate: {
+                        path: "role",
+                        select: "roleName"
+                    }
+                },
+            })
+            .populate({
+                path: "similarChanges",
+                populate: {
+                    path: "changeControl",
+                    select: "changeControlNumber",
+                }
+            })
         if (!changeControl) return res.status(404).json({ success: false, message: "Change control not found" });
         return res.status(200).json({
             success: true,
@@ -278,164 +336,164 @@ export const submitChangeControlForReview = async (req, res) => {
 };
 
 export const reviewChangeControl = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { action, reviewComments } = req.body;
-    const userId = req.user._id;
-    const changeControl = await ChangeControl.findById(id);
-    if (!changeControl) return res.status(404).send({ message: "change control not found" });
-    const reviewer = await Auth.findById(userId)
-      .populate("role", "roleName")
-      .populate("department", "departmentName");
-    if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
-    if (
-      reviewer.department.departmentName !== "QA" &&
-      String(reviewer.department._id) !== String(changeControl.department._id)
-    ) {
-      return res.status(403).send({
-        message:
-          "You can only review deviations from your own department (QA can review all).",
-      });
+    try {
+        const { id } = req.params;
+        const { action, reviewComments } = req.body;
+        const userId = req.user._id;
+        const changeControl = await ChangeControl.findById(id);
+        if (!changeControl) return res.status(404).send({ message: "change control not found" });
+        const reviewer = await Auth.findById(userId)
+            .populate("role", "roleName")
+            .populate("department", "departmentName");
+        if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
+        if (
+            reviewer.department.departmentName !== "QA" &&
+            String(reviewer.department._id) !== String(changeControl.department._id)
+        ) {
+            return res.status(403).send({
+                message:
+                    "You can only review deviations from your own department (QA can review all).",
+            });
+        }
+        if (reviewer.role.roleName !== "Reviewer") {
+            return res.status(403).send({
+                message: "Only users with Reviewer role can review this change control.",
+            });
+        }
+        if (changeControl.status !== "Under Department Head Review") {
+            return res.status(400).send({
+                message: "Only change control under department head review can be reviewed.",
+            });
+        }
+        let newStatus;
+        if (action === "Approved") newStatus = "Approved By Department Head";
+        else if (action === "Rejected") newStatus = "Draft";
+        else
+            return res.status(400).send({
+                message: "Invalid action — use 'Approved' or 'Rejected'.",
+            });
+        changeControl.status = newStatus;
+        changeControl.reviewedBy = reviewer._id;
+        changeControl.reviewedAt = new Date();
+        changeControl.reviewComments = reviewComments;
+        await changeControl.save();
+        return res.status(200).send({
+            message: `change control ${action.toLowerCase()} successfully.`,
+            success: true,
+            changeControl,
+        });
+    } catch (error) {
+        console.error("Error reviewing changeControl:", error);
+        return res.status(500).send({
+            message: "Error reviewing changeControl",
+            error: error.message,
+        });
     }
-    if (reviewer.role.roleName !== "Reviewer") {
-      return res.status(403).send({
-        message: "Only users with Reviewer role can review this change control.",
-      });
-    }
-    if (changeControl.status !== "Under Department Head Review") {
-      return res.status(400).send({
-        message: "Only change control under department head review can be reviewed.",
-      });
-    }
-    let newStatus;
-    if (action === "Approved") newStatus = "Approved By Department Head";
-    else if (action === "Rejected") newStatus = "Draft";
-    else
-      return res.status(400).send({
-        message: "Invalid action — use 'Approved' or 'Rejected'.",
-      });
-    changeControl.status = newStatus;
-    changeControl.reviewedBy = reviewer._id;
-    changeControl.reviewedAt = new Date();
-    changeControl.reviewComments = reviewComments;
-    await changeControl.save();
-    return res.status(200).send({
-      message: `change control ${action.toLowerCase()} successfully.`,
-      success: true,
-      changeControl,
-    });
-  } catch (error) {
-    console.error("Error reviewing changeControl:", error);
-    return res.status(500).send({
-      message: "Error reviewing changeControl",
-      error: error.message,
-    });
-  }
 };
 
 export const qaReviewChangeControl = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { action, qaComments } = req.body;
-    const changeControl = await ChangeControl.findById(id);
-    if (!changeControl) return res.status(404).json({ message: "change control not found" });
-    if (changeControl.status !== "Approved By Department Head") {
-      return res.status(400).json({
-        message: "Only change control approved by Department Head can be reviewed by QA",
-      });
+    try {
+        const { id } = req.params;
+        const { action, qaComments } = req.body;
+        const changeControl = await ChangeControl.findById(id);
+        if (!changeControl) return res.status(404).json({ message: "change control not found" });
+        if (changeControl.status !== "Approved By Department Head") {
+            return res.status(400).json({
+                message: "Only change control approved by Department Head can be reviewed by QA",
+            });
+        }
+        if (!["Approved", "Rejected"].includes(action)) {
+            return res.status(400).json({
+                message: "Invalid action. Must be 'Accepted' or 'Rejected'",
+            });
+        }
+        if (action === "Approved") {
+            changeControl.status = "Accepted By QA";
+            changeControl.qaReviewer = req.user._id;
+            changeControl.qaReviewedAt = new Date();
+            changeControl.qaComments = qaComments || null;
+        } else if (action === "Rejected") {
+            changeControl.status = "Draft";
+            changeControl.qaReviewer = req.user._id;
+            changeControl.qaReviewedAt = new Date();
+            changeControl.qaComments = qaComments || "Rejected by QA";
+        }
+        await changeControl.save();
+        res.status(200).json({
+            success: true,
+            message:
+                action === "Accepted"
+                    ? "change control. accepted by QA successfully."
+                    : "change control. rejected by QA.",
+            changeControl,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error reviewing change control by QA",
+            error: error.message,
+        });
     }
-    if (!["Approved", "Rejected"].includes(action)) {
-      return res.status(400).json({
-        message: "Invalid action. Must be 'Accepted' or 'Rejected'",
-      });
-    }
-    if (action === "Approved") {
-      changeControl.status = "Accepted By QA";
-      changeControl.qaReviewer = req.user._id;
-      changeControl.qaReviewedAt = new Date();
-      changeControl.qaComments = qaComments || null;
-    } else if (action === "Rejected") {
-      changeControl.status = "Draft";
-      changeControl.qaReviewer = req.user._id;
-      changeControl.qaReviewedAt = new Date();
-      changeControl.qaComments = qaComments || "Rejected by QA";
-    }
-    await changeControl.save();
-    res.status(200).json({
-      success: true,
-      message:
-        action === "Accepted"
-          ? "change control. accepted by QA successfully."
-          : "change control. rejected by QA.",
-      changeControl,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error reviewing change control by QA",
-      error: error.message,
-    });
-  }
 };
 
 export const recordChangeControlTeamImpact = async (req, res) => {
-  try {
-    const { changeControlId, answers } = req.body;
-    const userId = req.user._id;
-    const changeControl = await ChangeControl.findById(changeControlId).populate("investigationTeam");
-    if (!changeControl) return res.status(404).json({ message: "Change control not found" });
-    if (changeControl.status !== "Investigation Team Assigned") return res.status(400).json({ message: "Impact assessment can only be recorded when investigation team is assigned" });
-    const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
-    if (!team) return res.status(404).json({ message: "Investigation team not found" });
-    const isMember = team.members.some(m => m.user.toString() === userId.toString());
-    if (!isMember) return res.status(403).json({ message: "You are not authorized to record impact assessment for this change control" });
-    const newImpact = new ChangeImpact({
-      changeControlId,
-      answers,
-    });
-    await newImpact.save();
-    changeControl.teamImpactAssessment = newImpact._id;
-    changeControl.status = "Team Impact Assessment Done";
-    await changeControl.save();
-    res.status(201).json({
-      success: true,
-      message: "Team impact assessment recorded successfully",
-      impact: newImpact,
-    });
+    try {
+        const { changeControlId, answers } = req.body;
+        const userId = req.user._id;
+        const changeControl = await ChangeControl.findById(changeControlId).populate("investigationTeam");
+        if (!changeControl) return res.status(404).json({ message: "Change control not found" });
+        if (changeControl.status !== "Investigation Team Assigned") return res.status(400).json({ message: "Impact assessment can only be recorded when investigation team is assigned" });
+        const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
+        if (!team) return res.status(404).json({ message: "Investigation team not found" });
+        const isMember = team.members.some(m => m.user.toString() === userId.toString());
+        if (!isMember) return res.status(403).json({ message: "You are not authorized to record impact assessment for this change control" });
+        const newImpact = new ChangeImpact({
+            changeControlId,
+            answers,
+        });
+        await newImpact.save();
+        changeControl.teamImpactAssessment = newImpact._id;
+        changeControl.status = "Team Impact Assessment Done";
+        await changeControl.save();
+        res.status(201).json({
+            success: true,
+            message: "Team impact assessment recorded successfully",
+            impact: newImpact,
+        });
 
-  } catch (error) {
-    console.error("Error recording team impact assessment:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+    } catch (error) {
+        console.error("Error recording team impact assessment:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 }
 
 export const recordChangeControlHistoricalCheck = async (req, res) => {
-  try {
-    const { changeControlId, similarChanges } = req.body;
-    const userId = req.user._id;
-    if (!changeControlId) return res.status(400).json({ success: false, message: "changeControlId is required" });
-    const changeControl = await ChangeControl.findById(changeControlId);
-    if (!changeControl) return res.status(404).json({ success: false, message: "change control not found" });
-    if (changeControl.status !== "Team Impact Assessment Done") return res.status(400).json({ message: "Historical Check can only be done after impact assessment." });
-    const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
-    if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
-    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
-    if (!isMember) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to record historical check for this change control.",
-      });
+    try {
+        const { changeControlId, similarChanges } = req.body;
+        const userId = req.user._id;
+        if (!changeControlId) return res.status(400).json({ success: false, message: "changeControlId is required" });
+        const changeControl = await ChangeControl.findById(changeControlId);
+        if (!changeControl) return res.status(404).json({ success: false, message: "change control not found" });
+        if (changeControl.status !== "Team Impact Assessment Done") return res.status(400).json({ message: "Historical Check can only be done after impact assessment." });
+        const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
+        if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
+        const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+        if (!isMember) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to record historical check for this change control.",
+            });
+        }
+        changeControl.similarChanges = similarChanges || [];
+        changeControl.historicalCheckedBy = userId;
+        changeControl.status = "Historical Check Done";
+        await changeControl.save();
+        res.status(200).json({
+            success: true,
+            message: "Historical check recorded successfully.",
+            data: changeControl,
+        });
+    } catch (error) {
+        console.error("Error recording historical check:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-    changeControl.similarChanges = similarChanges || [];
-    changeControl.historicalCheckedBy = userId;
-    changeControl.status = "Historical Check Done";
-    await changeControl.save();
-    res.status(200).json({
-      success: true,
-      message: "Historical check recorded successfully.",
-      data: changeControl,
-    });
-  } catch (error) {
-    console.error("Error recording historical check:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
 }
