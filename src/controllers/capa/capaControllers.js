@@ -137,6 +137,13 @@ export const getCAPAById = async (req, res) => {
           }
         },
       })
+      .populate({
+        path: "immediateActions",
+        populate: {
+          path: "assignedTo",
+          select: "name"
+        }
+      })
 
     if (!capa) {
       return res.status(404).json({ success: false, message: "CAPA not found" });
@@ -371,9 +378,9 @@ export const recordChangeControlDecision = async (req, res) => {
     const { capaId, changeControlRequired, justification, immediateActions } = req.body;
     const userId = req.user._id;
     if (!capaId || changeControlRequired === undefined) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "capaId and changeControlRequired are required" 
+      return res.status(400).json({
+        success: false,
+        message: "capaId and changeControlRequired are required"
       });
     }
     const capa = await CAPA.findById(capaId);

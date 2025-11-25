@@ -217,24 +217,59 @@ export const getChangeControlById = async (req, res) => {
 }
 
 export const getChangeControlSummary = async (req, res) => {
-  try {
-    const { search } = req.query;
-    let query = {};
-    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
-    if (search && search.trim() !== "") {
-      query.shortTitle = { $regex: search, $options: "i" };
+    try {
+        const { search } = req.query;
+        let query = {};
+        if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+        if (search && search.trim() !== "") {
+            query.shortTitle = { $regex: search, $options: "i" };
+        }
+        const changeControls = await ChangeControl.find(query)
+            .select("changeControlNumber shortTitle initiatedAt");
+        res.status(200).json({
+            success: true,
+            changeControls,
+        });
+    } catch (err) {
+        console.error("Error fetching change control summary:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    const changeControls = await ChangeControl.find(query)
-      .select("changeControlNumber shortTitle initiatedAt");
-    res.status(200).json({
-      success: true,
-      changeControls,
-    });
-  } catch (err) {
-    console.error("Error fetching change control summary:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
+};
+
+export const submitChangeControlForReview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const changeControl = await ChangeControl.findById(id);
+        if (!changeControl) return res.status(404).json({ success: false, message: "Change control not found" });
+        if (req.user.department.departmentName !== "QA" &&
+            String(req.user.department._id) !== String(changeControl.department?._id)) {
+            return res.status(403).send({
+                message:
+                    "You can only submit change control that belong to your own department",
+            });
+        }
+        if (changeControl.status !== "Draft") {
+            return res.status(400).send({
+                message: "Only draft change control can be submitted for review",
+            });
+        }
+        changeControl.status = "Under Department Head Review";
+        changeControl.submittedBy = req.user._id;
+        changeControl.submittedAt = new Date();
+        await changeControl.save();
+        return res.status(200).send({
+            message: "change control submitted for review successfully",
+            success: true,
+            changeControl,
+        });
+    } catch (error) {
+        console.error("Error submitting change control:", error);
+        return res.status(500).send({
+            message: "Error submitting change control",
+            error: error.message,
+        });
+    }
 };
