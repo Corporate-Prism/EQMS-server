@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, qaReviewChangeControl, recordChangeControlTeamImpact, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, qaReviewChangeControl, recordChangeControlHistoricalCheck, recordChangeControlTeamImpact, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -482,4 +482,49 @@ router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewChangeControl
  *         description: Server error.
  */
 router.post("/impact-assessment", authAndAuthorize("Creator"), recordChangeControlTeamImpact);
+
+/**
+ * @swagger
+ * /api/v1/changeControl/historical-check:
+ *   post:
+ *     summary: Record Historical Check for a change control
+ *     description: Records similar past change control identified after impact assessment. Only allowed when deviation status is "Impact Assessment Done".
+ *     tags: [Change Control]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - changeControlId
+ *               - similarChanges
+ *             properties:
+ *               changeControlId:
+ *                 type: string
+ *                 description: ID of the current change control being updated.
+ *                 example: "67204e72b62e5a001e3c5a29"
+ *               similarChanges:
+ *                 type: array
+ *                 description: Array of similar past change controls for historical checking.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     changeControl:
+ *                       type: string
+ *                       description: ObjectId of the related past change control.
+ *                       example: "671fbb72d91b23001e3a7b21"
+ *     responses:
+ *       200:
+ *         description: Historical check recorded successfully.
+ *       400:
+ *         description: Invalid status or missing required fields.
+ *       404:
+ *         description: Change contol not found.
+ *       500:
+ *         description: Server error.
+ */
+router.post("/historical-check", authAndAuthorize("Creator"), recordChangeControlHistoricalCheck)
 export default router;

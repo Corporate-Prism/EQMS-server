@@ -488,7 +488,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  * @swagger
  * /api/v1/deviations/complete/{type}/{parentId}/{actionId}:
  *   patch:
- *     summary: Mark an immediate action as completed (Deviation or CAPA)
+ *     summary: Mark an immediate action as completed (deviation or capa)
  *     description: 
  *       Allows only the assigned user to mark their immediate action as **Completed**. 
  *       This API works for both **Deviations** and **CAPA** based on the `type` parameter. 
@@ -503,7 +503,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  *         schema:
  *           type: string
  *           enum: [deviation, capa]
- *         description: Specifies whether the action belongs to a Deviation or CAPA.
+ *         description: Specifies whether the action belongs to a deviation or capa.
  *         example: "deviation"
  *
  *       - in: path
@@ -511,7 +511,7 @@ router.post("/record-capa-decision", authAndAuthorize("Creator"), recordCapaDeci
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the Deviation or CAPA document.
+ *         description: ID of the deviation or capa document.
  *         example: "67204e72b62e5a001e3c5a29"
  *
  *       - in: path
@@ -575,9 +575,9 @@ router.patch(
  * @swagger
  * /api/v1/deviations/update-status/{type}/{id}:
  *   patch:
- *     summary: Update the status of a Deviation or CAPA based on workflow rules and user roles
+ *     summary: Update the status of a deviation or capa or change control based on workflow rules and user roles
  *     description: >
- *       This API updates the status of **Deviation** or **CAPA** documents depending on:
+ *       This API updates the status of **Deviation** or **CAPA** or **Change Control** documents depending on:
  *       - Current workflow stage  
  *       - Role of the user  
  *       - User department  
@@ -589,6 +589,7 @@ router.patch(
  *       - "Acknowledged By Team" → "Acknowledged By Approver 1"
  *       - "Change Control Initiated" → "Acknowledged By Approver 1"
  *       - "Immediate Actions Completed" → "Acknowledged By Approver 1"
+ *       - "Historical Check Done" → "Acknowledged By Approver 1"
  *       
  *       #### **Approver 2 (QA Department)** can change:
  *       - "Acknowledged By Approver 1" → "Acknowledged By Approver 2"
@@ -596,6 +597,7 @@ router.patch(
  *       #### **Approver (of the document's department)** can change:
  *       - For Deviation: "Acknowledged By Approver 2" → "Deviation Closed"
  *       - For CAPA: "Acknowledged By Approver 2" → "CAPA Closed"
+ *       - For Change Control: "Acknowledged By Approver 2" → "Change Control Closed"
  *
  *       All updates are permission-based and validated against the user's role & department.
  *     tags: [Deviations]
@@ -607,7 +609,7 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
- *           enum: [deviation, capa]
+ *           enum: [deviation, capa, changecontrol]
  *         description: Document type whose status must be updated.
  *         example: "deviation"
  *       - in: path
@@ -615,7 +617,7 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the Deviation or CAPA.
+ *         description: ID of the deviation or capa or change control.
  *         example: "67204e72b62e5a001e3c5a29"
  *     responses:
  *       200:

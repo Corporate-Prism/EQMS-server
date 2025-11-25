@@ -23,6 +23,10 @@ const ChangeControlSchema = new mongoose.Schema(
                 "Accepted By QA",
                 "Investigation Team Assigned",
                 "Team Impact Assessment Done",
+                "Historical Check Done",
+                "Acknowledged By Approver 1",
+                "Acknowledged By Approver 2",
+                "Change Control Closed"
 
             ],
             default: "Draft",
@@ -179,10 +183,6 @@ const ChangeControlSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "ChangeImpact",
             default: null,
-        },
-        outcome: {
-            type: String,
-            enum: ["Low", "Medium", "High"]
         },
         similarChanges: [
             {

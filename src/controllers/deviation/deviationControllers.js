@@ -5,6 +5,7 @@ import Auth from "../../models/Auth.js";
 import DeviationImpact from "../../models/deviation/DeviationImpact.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import CAPA from "../../models/capa/Capa.js";
+import ChangeControl from "../../models/change-control/ChangeControl.js";
 
 export const createDeviation = async (req, res) => {
   const session = await mongoose.startSession();
@@ -570,16 +571,93 @@ export const updateImmediateActionStatusCombined = async (req, res) => {
   }
 };
 
+// export const updateStatus = async (req, res) => {
+//   try {
+//     const { type, id } = req.params;
+//     const userId = req.user._id;
+//     const userRole = req.user.role;
+//     const userDept = req.user.department;
+//     const Models = {
+//       deviation: Deviation,
+//       capa: CAPA
+//     };
+//     const Model = Models[type];
+//     if (!Model)
+//       return res.status(400).json({ success: false, message: "Invalid document type" });
+
+//     const document = await Model.findById(id).populate("department");
+//     if (!document)
+//       return res.status(404).json({ success: false, message: `${type} not found` });
+
+//     let currentStatus = document.status;
+//     let deptName = document.department?.departmentName;
+//     let newStatus = null;
+//     const isApprover1Allowed =
+//       (currentStatus === "CAPA Initiated" ||
+//         currentStatus === "Acknowledged By Team" ||
+//         currentStatus === "Change Control Initiated" ||
+//         currentStatus === "Immediate Actions Completed") &&
+//       userRole.roleName === "Approver" &&
+//       userDept.departmentName === "QA";
+
+//     if (isApprover1Allowed) {
+//       newStatus = "Acknowledged By Approver 1";
+//     }
+
+//     else if (
+//       currentStatus === "Acknowledged By Approver 1" &&
+//       userRole.roleName === "Approver 2" &&
+//       userDept.departmentName === "QA"
+//     ) {
+//       newStatus = "Acknowledged By Approver 2";
+//     }
+
+//     else if (
+//       currentStatus === "Acknowledged By Approver 2" &&
+//       userRole.roleName === "Approver" &&
+//       userDept.departmentName === deptName
+//     ) {
+//       newStatus = type === "deviation" ? "Deviation Closed" : "CAPA Closed";
+//     }
+
+//     if (!newStatus) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `You are not allowed to update the status for this ${type}`,
+//       });
+//     }
+
+//     document.status = newStatus;
+//     await document.save();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: `${type} status updated to "${newStatus}"`,
+//       data: document,
+//     });
+
+//   } catch (error) {
+//     console.error("Error updating status:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error updating status",
+//       error: error.message,
+//     });
+//   }
+// };
+
 export const updateStatus = async (req, res) => {
   try {
     const { type, id } = req.params;
-    const userId = req.user._id;
     const userRole = req.user.role;
     const userDept = req.user.department;
+
     const Models = {
       deviation: Deviation,
-      capa: CAPA
+      capa: CAPA,
+      changecontrol: ChangeControl
     };
+
     const Model = Models[type];
     if (!Model)
       return res.status(400).json({ success: false, message: "Invalid document type" });
@@ -591,10 +669,12 @@ export const updateStatus = async (req, res) => {
     let currentStatus = document.status;
     let deptName = document.department?.departmentName;
     let newStatus = null;
+
     const isApprover1Allowed =
       (currentStatus === "CAPA Initiated" ||
         currentStatus === "Acknowledged By Team" ||
         currentStatus === "Change Control Initiated" ||
+        currentStatus === "Historical Check Done" ||
         currentStatus === "Immediate Actions Completed") &&
       userRole.roleName === "Approver" &&
       userDept.departmentName === "QA";
@@ -616,25 +696,28 @@ export const updateStatus = async (req, res) => {
       userRole.roleName === "Approver" &&
       userDept.departmentName === deptName
     ) {
-      newStatus = type === "deviation" ? "Deviation Closed" : "CAPA Closed";
+      if (type === "deviation") {
+        newStatus = "Deviation Closed";
+      } else if (type === "capa") {
+        newStatus = "CAPA Closed";
+      }
+      else if (type === "changecontrol") {
+        newStatus = "Change Control Closed";
+      }
     }
-
     if (!newStatus) {
       return res.status(400).json({
         success: false,
         message: `You are not allowed to update the status for this ${type}`,
       });
     }
-
     document.status = newStatus;
     await document.save();
-
     return res.status(200).json({
       success: true,
       message: `${type} status updated to "${newStatus}"`,
       data: document,
     });
-
   } catch (error) {
     console.error("Error updating status:", error);
     res.status(500).json({

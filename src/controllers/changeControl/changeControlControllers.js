@@ -407,3 +407,35 @@ export const recordChangeControlTeamImpact = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 }
+
+export const recordChangeControlHistoricalCheck = async (req, res) => {
+  try {
+    const { changeControlId, similarChanges } = req.body;
+    const userId = req.user._id;
+    if (!changeControlId) return res.status(400).json({ success: false, message: "changeControlId is required" });
+    const changeControl = await ChangeControl.findById(changeControlId);
+    if (!changeControl) return res.status(404).json({ success: false, message: "change control not found" });
+    if (changeControl.status !== "Team Impact Assessment Done") return res.status(400).json({ message: "Historical Check can only be done after impact assessment." });
+    const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
+    if (!team) return res.status(404).json({ success: false, message: "Investigation team not found." });
+    const isMember = team.members.some((m) => m.user.toString() === userId.toString());
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to record historical check for this change control.",
+      });
+    }
+    changeControl.similarChanges = similarChanges || [];
+    changeControl.historicalCheckedBy = userId;
+    changeControl.status = "Historical Check Done";
+    await changeControl.save();
+    res.status(200).json({
+      success: true,
+      message: "Historical check recorded successfully.",
+      data: changeControl,
+    });
+  } catch (error) {
+    console.error("Error recording historical check:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
