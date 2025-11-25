@@ -183,3 +183,58 @@ export const createChangeControl = async (req, res) => {
         });
     }
 };
+
+export const getAllChangeControls = async (req, res) => {
+    try {
+        const changeControls = await ChangeControl.find();
+        return res.status(200).json({
+            success: true,
+            data: changeControls,
+        });
+    } catch (error) {
+        console.error("Error fetching Change Controls:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching Change Controls",
+            error: error.message,
+        });
+    }
+}
+
+export const getChangeControlById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const changeControl = await ChangeControl.findById(id);
+        if (!changeControl) return res.status(404).json({ success: false, message: "Change control not found" });
+        return res.status(200).json({
+            success: true,
+            data: changeControl,
+        });
+    } catch (err) {
+        console.error("Error fetching CAPA by ID:", err);
+        res.status(500).json({ success: false, message: "Error fetching change control", error: err.message });
+    }
+}
+
+export const getChangeControlSummary = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = {};
+    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+    if (search && search.trim() !== "") {
+      query.shortTitle = { $regex: search, $options: "i" };
+    }
+    const changeControls = await ChangeControl.find(query)
+      .select("changeControlNumber shortTitle initiatedAt");
+    res.status(200).json({
+      success: true,
+      changeControls,
+    });
+  } catch (err) {
+    console.error("Error fetching change control summary:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
