@@ -21,7 +21,8 @@ const ChangeControlSchema = new mongoose.Schema(
                 "Under Department Head Review",
                 "Approved By Department Head",
                 "Accepted By QA",
-                "Investigation Team Assigned"
+                "Investigation Team Assigned",
+                "Team Impact Assessment Done",
 
             ],
             default: "Draft",
@@ -167,7 +168,7 @@ const ChangeControlSchema = new mongoose.Schema(
         qaComments: { type: String },
         investigationTeam: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "InvestigationTeam",
+            ref: "ChangeControlInvestigationTeam",
             default: null
         },
         investigationAssignedBy: {

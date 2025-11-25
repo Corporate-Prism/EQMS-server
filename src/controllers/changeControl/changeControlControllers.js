@@ -4,6 +4,8 @@ import Attachments from "../../models/deviation/Attachments.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import fs from "fs";
 import Auth from "../../models/Auth.js";
+import ChangeImpact from "../../models/change-control/ChangeImpact.js";
+import ChangeControlInvestigationTeam from "../../models/change-control/ChangeControlInvestigationTeam.js"
 
 export const createChangeControl = async (req, res) => {
     const session = await mongoose.startSession();
@@ -374,3 +376,34 @@ export const qaReviewChangeControl = async (req, res) => {
     });
   }
 };
+
+export const recordChangeControlTeamImpact = async (req, res) => {
+  try {
+    const { changeControlId, answers } = req.body;
+    const userId = req.user._id;
+    const changeControl = await ChangeControl.findById(changeControlId).populate("investigationTeam");
+    if (!changeControl) return res.status(404).json({ message: "Change control not found" });
+    if (changeControl.status !== "Investigation Team Assigned") return res.status(400).json({ message: "Impact assessment can only be recorded when investigation team is assigned" });
+    const team = await ChangeControlInvestigationTeam.findById(changeControl.investigationTeam);
+    if (!team) return res.status(404).json({ message: "Investigation team not found" });
+    const isMember = team.members.some(m => m.user.toString() === userId.toString());
+    if (!isMember) return res.status(403).json({ message: "You are not authorized to record impact assessment for this change control" });
+    const newImpact = new ChangeImpact({
+      changeControlId,
+      answers,
+    });
+    await newImpact.save();
+    changeControl.teamImpactAssessment = newImpact._id;
+    changeControl.status = "Team Impact Assessment Done";
+    await changeControl.save();
+    res.status(201).json({
+      success: true,
+      message: "Team impact assessment recorded successfully",
+      impact: newImpact,
+    });
+
+  } catch (error) {
+    console.error("Error recording team impact assessment:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+}
