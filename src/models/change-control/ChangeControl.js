@@ -19,6 +19,9 @@ const ChangeControlSchema = new mongoose.Schema(
             enum: [
                 "Draft",
                 "Under Department Head Review",
+                "Approved By Department Head",
+                "Accepted By QA",
+                "Investigation Team Assigned"
 
             ],
             default: "Draft",
