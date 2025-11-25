@@ -330,3 +330,47 @@ export const reviewChangeControl = async (req, res) => {
     });
   }
 };
+
+export const qaReviewChangeControl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, qaComments } = req.body;
+    const changeControl = await ChangeControl.findById(id);
+    if (!changeControl) return res.status(404).json({ message: "change control not found" });
+    if (changeControl.status !== "Approved By Department Head") {
+      return res.status(400).json({
+        message: "Only change control approved by Department Head can be reviewed by QA",
+      });
+    }
+    if (!["Approved", "Rejected"].includes(action)) {
+      return res.status(400).json({
+        message: "Invalid action. Must be 'Accepted' or 'Rejected'",
+      });
+    }
+    if (action === "Approved") {
+      changeControl.status = "Accepted By QA";
+      changeControl.qaReviewer = req.user._id;
+      changeControl.qaReviewedAt = new Date();
+      changeControl.qaComments = qaComments || null;
+    } else if (action === "Rejected") {
+      changeControl.status = "Draft";
+      changeControl.qaReviewer = req.user._id;
+      changeControl.qaReviewedAt = new Date();
+      changeControl.qaComments = qaComments || "Rejected by QA";
+    }
+    await changeControl.save();
+    res.status(200).json({
+      success: true,
+      message:
+        action === "Accepted"
+          ? "change control. accepted by QA successfully."
+          : "change control. rejected by QA.",
+      changeControl,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error reviewing change control by QA",
+      error: error.message,
+    });
+  }
+};

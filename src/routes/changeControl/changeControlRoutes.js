@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, qaReviewChangeControl, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -372,5 +372,61 @@ router.put("/:id/submit", authAndAuthorize("Creator"), submitChangeControlForRev
  */
 
 router.put("/:id/review", authAndAuthorize("Reviewer"), reviewChangeControl);
+
+/**
+ * @swagger
+ * /api/v1/changeControl/{id}/qa-review:
+ *   put:
+ *     summary: QA review change control (accept or reject)
+ *     tags: [Change Control]
+ *     description: QA Approver reviews a change control after Department Head approval.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: change control ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               qaComments:
+ *                 type: string
+ *                 example: "QA has reviewed and accepted the change control."
+ *     responses:
+ *       200:
+ *         description: change control reviewed by QA successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 changeControl:
+ *                   type: object
+ *       400:
+ *         description: Invalid status or action
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: change control not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:id/qa-review", authAndAuthorize("Approver"), qaReviewChangeControl);
+
 
 export default router;
