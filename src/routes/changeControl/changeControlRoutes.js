@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary, reviewChangeControl, submitChangeControlForReview } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -313,5 +313,64 @@ router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System A
  *                   example: Error submitting change control
  */
 router.put("/:id/submit", authAndAuthorize("Creator"), submitChangeControlForReview);
+
+/**
+ * @swagger
+ * /api/v1/changeControl/{id}/review:
+ *   put:
+ *     summary: Review a change control (approve or reject)
+ *     description: Allows a department head or QA reviewer to approve or reject a change control under review.
+ *     tags:
+ *       - Change Control
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: change control ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [Approved, Rejected]
+ *                 example: Approved
+ *               reviewComments:
+ *                 type: string
+ *                 example: "change control reviewed and approved."
+ *     responses:
+ *       200:
+ *         description: change control reviewed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: change control approved successfully.
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 changeControl:
+ *                   type: object
+ *       400:
+ *         description: Invalid request (wrong status or invalid action).
+ *       403:
+ *         description: Unauthorized — user cannot review this deviation.
+ *       404:
+ *         description: change control or reviewer not found.
+ *       500:
+ *         description: Server error.
+ */
+
+router.put("/:id/review", authAndAuthorize("Reviewer"), reviewChangeControl);
 
 export default router;

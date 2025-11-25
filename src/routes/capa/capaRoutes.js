@@ -75,7 +75,7 @@ const router = express.Router();
  *       403:
  *         description: Forbidden - User does not have permission
  *       404:
- *         description: Deviation not found
+ *         description: capa not found
  *       500:
  *         description: Server error
  */
@@ -266,7 +266,7 @@ router.put("/:id/submit", authAndAuthorize("Creator"), submitCapaForReview);
  * /api/v1/capa/{id}/review:
  *   put:
  *     summary: Review a capa (approve or reject)
- *     description: Allows a department head or QA reviewer to approve or reject a deviation under review.
+ *     description: Allows a department head or QA reviewer to approve or reject a capa under review.
  *     tags:
  *       - CAPA
  *     security:
@@ -311,7 +311,7 @@ router.put("/:id/submit", authAndAuthorize("Creator"), submitCapaForReview);
  *       400:
  *         description: Invalid request (wrong status or invalid action).
  *       403:
- *         description: Unauthorized — user cannot review this deviation.
+ *         description: Unauthorized — user cannot review this capa.
  *       404:
  *         description: capa or reviewer not found.
  *       500:

@@ -3,6 +3,7 @@ import ChangeControl from "../../models/change-control/ChangeControl.js";
 import Attachments from "../../models/deviation/Attachments.js";
 import { uploadFilesToCloudinary } from "../../../utils/uploadToCloudinary.js";
 import fs from "fs";
+import Auth from "../../models/Auth.js";
 
 export const createChangeControl = async (req, res) => {
     const session = await mongoose.startSession();
@@ -211,7 +212,7 @@ export const getChangeControlById = async (req, res) => {
             data: changeControl,
         });
     } catch (err) {
-        console.error("Error fetching CAPA by ID:", err);
+        console.error("Error fetching change control by ID:", err);
         res.status(500).json({ success: false, message: "Error fetching change control", error: err.message });
     }
 }
@@ -272,4 +273,60 @@ export const submitChangeControlForReview = async (req, res) => {
             error: error.message,
         });
     }
+};
+
+export const reviewChangeControl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, reviewComments } = req.body;
+    const userId = req.user._id;
+    const changeControl = await ChangeControl.findById(id);
+    if (!changeControl) return res.status(404).send({ message: "change control not found" });
+    const reviewer = await Auth.findById(userId)
+      .populate("role", "roleName")
+      .populate("department", "departmentName");
+    if (!reviewer) return res.status(404).send({ message: "Reviewer not found" });
+    if (
+      reviewer.department.departmentName !== "QA" &&
+      String(reviewer.department._id) !== String(changeControl.department._id)
+    ) {
+      return res.status(403).send({
+        message:
+          "You can only review deviations from your own department (QA can review all).",
+      });
+    }
+    if (reviewer.role.roleName !== "Reviewer") {
+      return res.status(403).send({
+        message: "Only users with Reviewer role can review this change control.",
+      });
+    }
+    if (changeControl.status !== "Under Department Head Review") {
+      return res.status(400).send({
+        message: "Only change control under department head review can be reviewed.",
+      });
+    }
+    let newStatus;
+    if (action === "Approved") newStatus = "Approved By Department Head";
+    else if (action === "Rejected") newStatus = "Draft";
+    else
+      return res.status(400).send({
+        message: "Invalid action — use 'Approved' or 'Rejected'.",
+      });
+    changeControl.status = newStatus;
+    changeControl.reviewedBy = reviewer._id;
+    changeControl.reviewedAt = new Date();
+    changeControl.reviewComments = reviewComments;
+    await changeControl.save();
+    return res.status(200).send({
+      message: `change control ${action.toLowerCase()} successfully.`,
+      success: true,
+      changeControl,
+    });
+  } catch (error) {
+    console.error("Error reviewing changeControl:", error);
+    return res.status(500).send({
+      message: "Error reviewing changeControl",
+      error: error.message,
+    });
+  }
 };
