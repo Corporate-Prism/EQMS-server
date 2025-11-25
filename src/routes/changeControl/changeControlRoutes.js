@@ -1,7 +1,7 @@
 import express from "express";
 import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
 import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl } from "../../controllers/changeControl/changeControlControllers.js";
+import { createChangeControl, getAllChangeControls, getChangeControlById, getChangeControlSummary } from "../../controllers/changeControl/changeControlControllers.js";
 
 const router = express.Router();
 
@@ -140,5 +140,88 @@ router.post(
     ]),
     createChangeControl
 );
+
+/**
+ * @swagger
+ * /api/v1/changeControl/:
+ *   get:
+ *     summary: Get all Change control records
+ *     tags: [Change Control]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of Change control records retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       500:
+ *         description: Server error
+ *
+ */
+router.get("/", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin"), getAllChangeControls)
+
+/**
+ * @swagger
+ * /api/v1/changeControl/summary:
+ *   get:
+ *     summary: Get all changeControl records (summary view)
+ *     tags: [Change Control]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Search changeControl by short title (case-insensitive)
+ *         example: "Repeated deviations observed"
+ *     responses:
+ *       200: 
+ *         description: List of change controls retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/summary",
+  authAndAuthorize("System Admin", "Creator", "Reviewer", "Approver", "Approver 2"),
+  getChangeControlSummary
+);
+
+
+/**
+ * @swagger
+ * /api/v1/changeControl/{id}:
+ *   get:
+ *     summary: Get a single change control record by ID
+ *     tags: [Change Control]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The change control ID
+ *     responses:
+ *       200:
+ *         description: change control record retrieved successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - User does not have access
+ *       404:
+ *         description: change control not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:id", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admin", "Approver 2"), getChangeControlById)
 
 export default router;

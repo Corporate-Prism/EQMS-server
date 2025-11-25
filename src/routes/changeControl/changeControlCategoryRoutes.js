@@ -1,189 +1,152 @@
 import express from "express";
-import { authAndAuthorize } from "../../middlewares/authMiddleware.js";
-import { upload } from "../deviation/deviationRoutes.js";
-import { createChangeControl } from "../../controllers/changeControl/changeControlControllers.js";
+import { addNewChangeCategory, deleteChangeCategory, getAllChangeCategories, getChangeCategoryById, updateChangeCategory } from "../../controllers/changeControl/changeCategoryControllers.js";
 
 const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/changeControl:
+ * /api/v1/changeCategories/newChangeCategory:
  *   post:
- *     summary: Create a new Change Control record
- *     tags:
- *       - Change Control
- *     security:
- *       - bearerAuth: []
+ *     summary: Create a new change category
+ *     tags: [ChangeCategories]
+ *     description: Add a new change category to the system
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
-
- *               initiatedAt:
+ *               categoryName:
  *                 type: string
- *                 format: date
- *                 example: "2025-11-10"
-
- *               justification:
- *                 type: string
- *                 example: "Change required due to updated regulatory guidelines"
-
- *               changeType1:
- *                 type: string
- *                 enum: [Major, Minor, Administrative]
- *                 example: "Major"
-
- *               changeType2:
- *                 type: string
- *                 enum: [Permanent, Temporary]
- *                 example: "Permanent"
-
- *               changeType3:
- *                 type: string
- *                 description: "ObjectId of ChangeCategory"
- *                 example: "674fc8a4b2a41ccead109aaa"
-
- *               department:
- *                 type: string
- *                 description: "Department ObjectId"
- *                 example: "674fc8a4b2a41ccead109f21"
-
- *               location:
- *                 type: string
- *                 description: "Location ObjectId"
- *                 example: "674fc8a4b2a41ccead109f21"
-
- *               # ----------------------------
- *               # ITEM (Now proper object)
- *               # ----------------------------
- *               item:
- *                 type: object
- *                 properties:
- *                   type:
- *                     type: string
- *                     enum: [product, material, equipment]
- *                   productName:
- *                     type: string
- *                   productCode:
- *                     type: string
- *                   productBatchNumber:
- *                     type: string
- *                   materialName:
- *                     type: string
- *                   materialCode:
- *                     type: string
- *                   materialBatchNumber:
- *                     type: string
- *                   equipment:
- *                     type: string
- *                     description: "Equipment ObjectId"
- *                 required:
- *                   - type
- *                 example:
- *                   type: "product"
- *                   productName: "Amoxicillin 250mg"
- *                   productCode: "AMX-250"
- *                   productBatchNumber: "BATCH-001"
-
- *               # ----------------------------
- *               # DOCUMENTS (Now proper array)
- *               # ----------------------------
- *               documents:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     documentId:
- *                       type: string
- *                     documentModel:
- *                       type: string
- *                       enum: [Manual, Policy, Procedure, WorkInstruction]
- *                 example:
- *                   - documentId: "674fc8a4b2a41ccead109aaa"
- *                     documentModel: "Manual"
-
- *               # ----------------------------
- *               # SIMILAR CHANGES (Array)
- *               # ----------------------------
- *               similarChanges:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example:
- *                   - "674fc8a4b2a41ccead109bbb"
- *                   - "674fc8a4b2a41ccead109ccc"
-
- *               currentSituation:
- *                 type: string
- *                 example: "Equipment malfunctioning frequently"
-
- *               shortTitle:
- *                 type: string
- *                 example: "Change in Equipment Maintenance Procedure"
-
- *               answer1:
- *                 type: string
- *                 example: "Proposed change is to modify maintenance frequency"
-
- *               answer2:
- *                 type: string
- *                 example: "It is required to reduce downtime and failures"
-
- *               impactAssessment:
- *                 type: string
- *                 example: "Low impact, no risk to product quality"
-
- *               riskAssessment:
- *                 type: number
- *                 minimum: 1
- *                 maximum: 10
- *                 example: 5
-
- *               startDate:
- *                 type: string
- *                 format: date
- *                 example: "2025-11-15"
-
- *               endDate:
- *                 type: string
- *                 format: date
- *                 example: "2025-12-01"
-
- *               capa:
- *                 type: string
- *                 description: "CAPA ObjectId"
- *                 example: "674fc8a4b2a41ccead10capa"
-
- *               # ----------------------------
- *               # FILE UPLOADS
- *               # ----------------------------
- *               detailedDescriptionAttachments:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
-
+ *                 required: true
+ *                 example: Environmental
  *     responses:
  *       201:
- *         description: Change Control created successfully
+ *         description: Change category created successfully
  *       400:
- *         description: Invalid input data
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
+ *         description: Bad request
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
+router.post("/newChangeCategory", addNewChangeCategory);
 
-router.post(
-  "/",
-  authAndAuthorize("Creator"),
-  upload.fields([{ name: "detailedDescriptionAttachments", maxCount: 20 }]),
-  createChangeControl
-);
+/**
+ * @swagger
+ * /api/v1/changeCategories:
+ *   get:
+ *     summary: Retrieve all change categories
+ *     tags: [ChangeCategories]
+ *     description: Fetch a list of all change categories with name search
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term to filter change categories by name.
+ *     responses:
+ *       200:
+ *         description: Change categories retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 changeCategories:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       categoryName:
+ *                         type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/", getAllChangeCategories);
+
+/**
+ * @swagger
+ * /api/v1/changeCategories/{id}:
+ *   get:
+ *     summary: Retrieve change category using change category id
+ *     tags: [ChangeCategories]
+ *     description: change category using change category id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the change category to fetch
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Change category retrieved successfully
+ *         content:
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:id", getChangeCategoryById);
+
+/**
+ * @swagger
+ * /api/v1/changeCategories/update/{id}:
+ *   put:
+ *     summary: Update deviaton category by ID
+ *     tags: [ChangeCategories]
+ *     description: Update a change category by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the change category to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               categoryName:
+ *                 type: string
+ *                 example: Environmental
+ *     responses:
+ *       200:
+ *         description: Change Category updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Change category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/update/:id", updateChangeCategory);
+
+/**
+ * @swagger
+ * /api/v1/changeCategories/{id}:
+ *   delete:
+ *     summary: Delete change category by ID
+ *     tags: [ChangeCategories]
+ *     description: Delete a change category by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the change category to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: change category deleted successfully
+ *       404:
+ *         description: change category not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/:id", deleteChangeCategory);
 
 export default router;
