@@ -4,7 +4,7 @@ const ChangeImpactSchema = new mongoose.Schema(
     {
         changeControlId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Deviation",
+            ref: "ChangeControl",
             required: true,
         },
         answers: [

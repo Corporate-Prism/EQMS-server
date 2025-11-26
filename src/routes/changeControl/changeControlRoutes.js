@@ -512,7 +512,7 @@ router.post("/impact-assessment", authAndAuthorize("Creator"), recordChangeContr
  *                 items:
  *                   type: object
  *                   properties:
- *                     changeControl:
+ *                     change:
  *                       type: string
  *                       description: ObjectId of the related past change control.
  *                       example: "671fbb72d91b23001e3a7b21"

@@ -94,30 +94,33 @@ export const createChangeControl = async (req, res) => {
             }
         }
         let similarChanges = [];
+
         if (body.similarChanges) {
             try {
-                let parsed = typeof body.similarChanges === "string"
-                    ? JSON.parse(body.similarChanges)
-                    : body.similarChanges;
+                let parsed = body.similarChanges;
 
-                if (!Array.isArray(parsed)) {
-                    parsed = [parsed];
+                // If string → try JSON first
+                if (typeof parsed === "string") {
+                    try {
+                        parsed = JSON.parse(parsed);
+                    } catch {
+                        // fallback: comma-separated IDs
+                        parsed = parsed.split(",").map(v => v.trim());
+                    }
                 }
 
+                if (!Array.isArray(parsed)) parsed = [parsed];
+
                 similarChanges = parsed
-                    .filter(id => {
-                        const valid = mongoose.Types.ObjectId.isValid(id);
-                        if (!valid) console.warn("Invalid ObjectId:", id);
-                        return valid;
-                    })
-                    .map(id => ({
-                        change: id
-                    }));
-            } catch (error) {
-                console.error("Error parsing similarChanges:", error);
+                    .filter(id => mongoose.Types.ObjectId.isValid(id))
+                    .map(id => ({ change: id }));
+
+            } catch (err) {
+                console.error("Invalid similarChanges payload:", body.similarChanges);
                 similarChanges = [];
             }
         }
+
         const implementationTimeline = {
             startDate: body.startDate || null,
             endDate: body.endDate || null,
@@ -200,6 +203,11 @@ export const getAllChangeControls = async (req, res) => {
             .populate("reviewedBy", "name")
             .populate("qaReviewer", "name")
             .populate("investigationAssignedBy", "name")
+            .populate("teamImpactAssessment")
+            .populate({
+                path: "similarChanges.change",
+                select: "changeControlNumber status"
+            })
             .populate("historicalCheckedBy", "name")
             .populate({
                 path: "investigationTeam",
@@ -219,6 +227,8 @@ export const getAllChangeControls = async (req, res) => {
                     select: "changeControlNumber",
                 }
             })
+            .populate("capa", "capaNumber reasonForCAPA")
+            .populate("documents.documentId", "manualName policyName procedureName workInstructionName");
         return res.status(200).json({
             success: true,
             data: changeControls,
@@ -247,6 +257,11 @@ export const getChangeControlById = async (req, res) => {
             .populate("reviewedBy", "name")
             .populate("qaReviewer", "name")
             .populate("investigationAssignedBy", "name")
+            .populate("teamImpactAssessment")
+            .populate({
+                path: "similarChanges.change",
+                select: "changeControlNumber status"
+            })
             .populate("historicalCheckedBy", "name")
             .populate({
                 path: "investigationTeam",
@@ -266,6 +281,9 @@ export const getChangeControlById = async (req, res) => {
                     select: "changeControlNumber",
                 }
             })
+            .populate("capa", "capaNumber reasonForCAPA")
+            .populate("documents.documentId", "manualName policyName procedureName workInstructionName");
+
         if (!changeControl) return res.status(404).json({ success: false, message: "Change control not found" });
         return res.status(200).json({
             success: true,
