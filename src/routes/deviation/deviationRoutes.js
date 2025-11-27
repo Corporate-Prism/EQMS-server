@@ -70,6 +70,20 @@ router.get("/", authAndAuthorize("System Admin", "Creator", "Reviewer", "Approve
  *         required: false
  *         description: Search deviations by summary (case-insensitive)
  *         example: "temperature deviation"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: page number
+ *         example: "2"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: number of doucments to show
+ *         example: "10"
  *     responses:
  *       200: 
  *         description: List of deviations retrieved successfully

@@ -209,27 +209,88 @@ export const getDeviations = async (req, res) => {
   }
 }
 
+// export const getDeviationsSummary = async (req, res) => {
+//   try {
+//     const { search } = req.query;
+//     let query = {}
+//     if (req.user.department.departmentName !== "QA") {
+//       query = { department: req.user.department._id }
+//     }
+//     if (search && search.trim() !== "") query.summary = { $regex: search, $options: "i" };
+//     const deviations = await Deviation.find(query)
+//       .select("summary deviationNumber")
+//     res.status(200).json({
+//       success: true,
+//       deviations
+//     })
+//   } catch (err) {
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// }
+
 export const getDeviationsSummary = async (req, res) => {
   try {
-    const { search } = req.query;
-    let query = {}
+    const { search, page, limit } = req.query;
+
+    let query = {};
+
+    // Department-based access
     if (req.user.department.departmentName !== "QA") {
-      query = { department: req.user.department._id }
+      query.department = req.user.department._id;
     }
-    if (search && search.trim() !== "") query.summary = { $regex: search, $options: "i" };
-    const deviations = await Deviation.find(query)
+
+    // Search filter
+    if (search && search.trim() !== "") {
+      query.summary = { $regex: search, $options: "i" };
+    }
+
+    // Check if pagination is provided
+    const isPaginationProvided = page && limit;
+
+    let deviationsQuery = Deviation.find(query)
       .select("summary deviationNumber")
+      .sort({ createdAt: -1 });
+
+    let deviations, pagination;
+
+    if (isPaginationProvided) {
+      const pageNumber = parseInt(page);
+      const limitNumber = parseInt(limit);
+      const skip = (pageNumber - 1) * limitNumber;
+
+      const total = await Deviation.countDocuments(query);
+
+      deviations = await deviationsQuery
+        .skip(skip)
+        .limit(limitNumber);
+
+      pagination = {
+        totalRecords: total,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        limit: limitNumber,
+      };
+    } else {
+      // No pagination → return ALL records
+      deviations = await deviationsQuery;
+    }
+
     res.status(200).json({
       success: true,
-      deviations
-    })
+      deviations,
+      ...(pagination && { pagination }),
+    });
+
   } catch (err) {
     res.status(500).json({
       success: false,
       message: err.message,
     });
   }
-}
+};
 
 export const getDeviationById = async (req, res) => {
   try {

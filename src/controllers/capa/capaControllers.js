@@ -164,9 +164,9 @@ export const getCAPASummary = async (req, res) => {
   try {
     const { search } = req.query;
     let query = {};
-    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+    if (req.user.department.departmentName !== "QA") query = {department:req.user.department._id};
     if (search && search.trim() !== "") {
-      query.reasonForCAPA = { $regex: search, $options: "i" };
+      query.capaNumber = { $regex: search, $options: "i" };
     }
     const capas = await CAPA.find(query)
       .select("capaNumber reasonForCAPA initiationDate targetClosureDate");
