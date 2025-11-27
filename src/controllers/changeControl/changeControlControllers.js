@@ -54,8 +54,8 @@ export const createChangeControl = async (req, res) => {
                 productBatchNumber: itemObj.productBatchNumber,
             };
         }
-        else if (itemObj.type === "product") {
-            itemData.product = {
+        else if (itemObj.type === "material") {
+            itemData.material = {
                 materialName: itemObj.materialName,
                 materialCode: itemObj.materialCode,
                 materialBatchNumber: itemObj.materialBatchNumber,
@@ -299,7 +299,7 @@ export const getChangeControlSummary = async (req, res) => {
     try {
         const { search } = req.query;
         let query = {};
-        if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+        if (req.user.department.departmentName !== "QA") query = { department: req.user.department._id };
         if (search && search.trim() !== "") {
             query.shortTitle = { $regex: search, $options: "i" };
         }

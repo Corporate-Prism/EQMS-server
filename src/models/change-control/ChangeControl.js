@@ -9,7 +9,6 @@ const ChangeControlSchema = new mongoose.Schema(
         },
         initiatedAt: {
             type: Date,
-            required: true,
         },
         justification: {
             type: String
@@ -35,34 +34,28 @@ const ChangeControlSchema = new mongoose.Schema(
             type1: {
                 type: String,
                 enum: ["Major", "Minor", "Administrative"],
-                required: true,
             },
             type2: {
                 type: String,
                 enum: ["Permanent", "Temporary"],
-                required: true,
             },
             type3: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "ChangeCategory",
-                required: true,
             },
         },
         department: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Department",
-            required: true,
         },
         location: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Location",
-            required: true,
         },
         item: {
             type: {
                 type: String,
                 enum: ["product", "material", "equipment"],
-                required: true,
             },
             product: {
                 productName: String,
