@@ -162,17 +162,37 @@ export const getCAPAById = async (req, res) => {
 
 export const getCAPASummary = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, page, limit } = req.query;
     let query = {};
-    if (req.user.department.departmentName !== "QA") query = {department:req.user.department._id};
-    if (search && search.trim() !== "") {
-      query.capaNumber = { $regex: search, $options: "i" };
+    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+    if (search && search.trim() !== "") query.capaNumber = { $regex: search, $options: "i" };
+    const isPaginationProvided = page && limit;
+    const capasQuery = CAPA.find(query)
+      .select("capaNumber reasonForCAPA initiationDate targetClosureDate")
+      .sort({ createdAt: -1 });
+    let capas, pagination;
+    if (isPaginationProvided) {
+      const pageNumber = parseInt(page);
+      const limitNumber = parseInt(limit);
+      const skip = (pageNumber - 1) * limitNumber;
+      const total = await CAPA.countDocuments(query);
+      capas = await capasQuery
+        .skip(skip)
+        .limit(limitNumber);
+
+      pagination = {
+        totalRecords: total,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        limit: limitNumber,
+      };
+    } else {
+      capas = await capasQuery;
     }
-    const capas = await CAPA.find(query)
-      .select("capaNumber reasonForCAPA initiationDate targetClosureDate");
     res.status(200).json({
       success: true,
       capas,
+      ...(pagination && { pagination }),
     });
   } catch (err) {
     console.error("Error fetching CAPA summary:", err);

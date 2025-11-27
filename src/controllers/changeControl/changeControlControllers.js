@@ -297,17 +297,36 @@ export const getChangeControlById = async (req, res) => {
 
 export const getChangeControlSummary = async (req, res) => {
     try {
-        const { search } = req.query;
+        const { search, page, limit } = req.query;
         let query = {};
         if (req.user.department.departmentName !== "QA") query = { department: req.user.department._id };
-        if (search && search.trim() !== "") {
-            query.shortTitle = { $regex: search, $options: "i" };
+        if (search && search.trim() !== "") query.shortTitle = { $regex: search, $options: "i" }
+        const isPaginationProvided = page && limit;
+        let changeControlsQuery = ChangeControl.find(query)
+            .select("changeControlNumber shortTitle initiatedAt")
+            .sort({ createdAt: -1 });
+        let changeControls, pagination;
+        if (isPaginationProvided) {
+            const pageNumber = parseInt(page);
+            const limitNumber = parseInt(limit);
+            const skip = (pageNumber - 1) * limitNumber;
+            const total = await ChangeControl.countDocuments(query)
+            changeControls = await changeControlsQuery
+                .skip(skip)
+                .limit(limitNumber);
+            pagination = {
+                totalRecords: total,
+                currentPage: pageNumber,
+                totalPages: Math.ceil(total / limitNumber),
+                limit: limitNumber,
+            }
+        } else {
+            changeControls = await changeControlsQuery
         }
-        const changeControls = await ChangeControl.find(query)
-            .select("changeControlNumber shortTitle initiatedAt");
         res.status(200).json({
             success: true,
             changeControls,
+            ...(pagination && { pagination }),
         });
     } catch (err) {
         console.error("Error fetching change control summary:", err);

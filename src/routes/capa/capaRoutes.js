@@ -126,6 +126,20 @@ router.get("/", authAndAuthorize("Creator", "Approver", "Reviewer", "System Admi
  *         required: false
  *         description: Search CAPAs by reasonForCAPA (case-insensitive)
  *         example: "Repeated deviations observed"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: page number
+ *         example: "2"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: number of doucments to show
+ *         example: "10"
  *     responses:
  *       200: 
  *         description: List of CAPAs retrieved successfully

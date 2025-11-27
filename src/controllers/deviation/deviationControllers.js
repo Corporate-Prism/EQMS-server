@@ -234,28 +234,14 @@ export const getDeviations = async (req, res) => {
 export const getDeviationsSummary = async (req, res) => {
   try {
     const { search, page, limit } = req.query;
-
     let query = {};
-
-    // Department-based access
-    if (req.user.department.departmentName !== "QA") {
-      query.department = req.user.department._id;
-    }
-
-    // Search filter
-    if (search && search.trim() !== "") {
-      query.summary = { $regex: search, $options: "i" };
-    }
-
-    // Check if pagination is provided
+    if (req.user.department.departmentName !== "QA") query.department = req.user.department._id;
+    if (search && search.trim() !== "") query.summary = { $regex: search, $options: "i" };
     const isPaginationProvided = page && limit;
-
     let deviationsQuery = Deviation.find(query)
       .select("summary deviationNumber")
       .sort({ createdAt: -1 });
-
     let deviations, pagination;
-
     if (isPaginationProvided) {
       const pageNumber = parseInt(page);
       const limitNumber = parseInt(limit);
@@ -274,7 +260,6 @@ export const getDeviationsSummary = async (req, res) => {
         limit: limitNumber,
       };
     } else {
-      // No pagination → return ALL records
       deviations = await deviationsQuery;
     }
 
